@@ -1,6 +1,6 @@
 # Tufte-VDQI Plugin
 
-Edward Tufte's principles of graphical excellence, data integrity, and visual display of quantitative information — packaged as a Claude Code plugin with 9 executable skills.
+Edward Tufte's principles of graphical excellence, data integrity, and visual display of quantitative information — packaged as a Claude Code plugin with 10 executable skills.
 
 ---
 
@@ -17,6 +17,7 @@ Edward Tufte's principles of graphical excellence, data integrity, and visual di
 | `generate-range-frames` | Replace rectangular plot frame with range-frame spanning observed data |
 | `integrate-text-and-graphic` | Place captions and labels in the plotting field |
 | `construct-small-multiples` | Compose paneled graphics sharing design, varying one variable |
+| `render-tufte-chart` | Render data as a complete Tufte-styled HTML chart with CSS |
 
 ---
 
