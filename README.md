@@ -1,73 +1,100 @@
-# Tufte-VDQI Plugin
+# Chartwright
 
-Edward Tufte's principles of graphical excellence, data integrity, and visual display of quantitative information — packaged as a Claude Code plugin with 10 executable skills.
+> Give your AI agents the skill of visualizing data the way Edward Tufte intended.
+
+<p align="center">
+  <img src="https://www.edwardtufte.com/wp-content/uploads/2023/09/edward-tufte-visual-display-of-quantitative-information.jpg" alt="The Visual Display of Quantitative Information — Edward Tufte" width="260" />
+</p>
+
+*Based on Edward Tufte's* The Visual Display of Quantitative Information
+
+---
+
+Every chart your agent produces gets scored against Tufte's principles — lie factor measured, chartjunk stripped, redundant ink removed, labels moved inline, axes replaced with range-frames, monetary values inflation-adjusted, and the result rendered as clean HTML. Not as a suggestion. As a workflow.
+
+---
+
+## Install
+
+**Individual (Claude Code)**
+
+1. Open Claude Desktop → switch to the Cowork tab
+2. Go to **Plugins**
+3. Add this repo as a plugin source
+4. Upload the ZIP file
+
+**Organization (admin)**
+
+1. Go to Organization Settings → Plugins
+2. Select **GitHub** as the source
+3. Paste this repo URL
+4. Set market preference: Required / Available / Default
+
+*Requires a paid Claude plan (Pro, Max, Team, or Enterprise) with Cowork enabled.*
 
 ---
 
 ## Skills
 
-| Skill | Purpose |
-|-------|---------|
-| `orchestrate-tufte-vdqi` | Intelligent router — describe your challenge and get guided to the right skill |
-| `assess-graphical-excellence` | Score a graphic against Tufte's nine criteria |
-| `calculate-lie-factor` | Measure visual distortion vs. data magnitude |
-| `erase-non-data-ink` | Remove decoration that carries no data |
-| `erase-redundant-data-ink` | Eliminate redundant encodings of the same datum |
-| `standardize-monetary-units` | Convert nominal dollars to inflation-adjusted constants |
-| `generate-range-frames` | Replace rectangular plot frame with range-frame spanning observed data |
-| `integrate-text-and-graphic` | Place captions and labels in the plotting field |
-| `construct-small-multiples` | Compose paneled graphics sharing design, varying one variable |
-| `render-tufte-chart` | Render data as a complete Tufte-styled HTML chart with CSS |
+| Skill | What it does |
+|-------|-------------|
+| `orchestrate-tufte-vdqi` | Describe your chart challenge — gets routed to the right skills automatically |
+| `assess-graphical-excellence` | Score a graphic against Tufte's nine criteria for graphical excellence |
+| `calculate-lie-factor` | Measure the ratio of visual distortion to actual data change |
+| `erase-non-data-ink` | Remove decoration, borders, and fills that carry no information |
+| `erase-redundant-data-ink` | Eliminate repeated encodings of the same datum |
+| `standardize-monetary-units` | Convert nominal dollars to inflation-adjusted constants for time-series |
+| `generate-range-frames` | Replace rectangular plot frames with range-frames that span actual data |
+| `integrate-text-and-graphic` | Place labels and captions directly in the plotting field |
+| `construct-small-multiples` | Compose paneled graphics sharing a design, varying one variable |
+| `render-tufte-chart` | Render data as a complete Tufte-styled HTML chart with inline CSS |
 
 ---
 
-## Quick Start
+## Usage
+
+Start with the orchestrator — it detects your intent and routes you:
 
 ```
 /orchestrate-tufte-vdqi
 ```
 
-Describe your visualization challenge and get routed to the right skills.
+Or invoke skills directly:
+
+```
+/calculate-lie-factor
+/assess-graphical-excellence
+/render-tufte-chart
+```
 
 ---
 
-## Common Workflows
+## Common workflows
 
-### "I have a chart that doesn't look right"
+### "My chart looks wrong"
 ```
-1. assess-graphical-excellence   ← find what's wrong
-2. calculate-lie-factor          ← check for distortion
-3. erase-non-data-ink            ← remove decoration
-4. erase-redundant-data-ink      ← simplify encoding
+assess-graphical-excellence   → find what's failing
+calculate-lie-factor          → check for distortion
+erase-non-data-ink            → strip the decoration
+erase-redundant-data-ink      → simplify the encoding
 ```
 
-### "I need to redesign a chart"
+### "I need to redesign a chart from scratch"
 ```
-1. assess-graphical-excellence   ← baseline score
-2. generate-range-frames         ← replace heavy frame
-3. integrate-text-and-graphic    ← move labels inline
-4. construct-small-multiples     ← if comparing across groups
+assess-graphical-excellence   → baseline score
+generate-range-frames         → replace the heavy frame
+integrate-text-and-graphic    → move labels inline
+construct-small-multiples     → if comparing across groups
+render-tufte-chart            → output clean HTML
 ```
 
 ### "My data has monetary values over time"
 ```
-1. standardize-monetary-units    ← inflation-adjust
-2. generate-range-frames         ← clean axes
-3. integrate-text-and-graphic    ← direct labeling
+standardize-monetary-units    → inflation-adjust first
+generate-range-frames         → clean the axes
+integrate-text-and-graphic    → direct labeling
+render-tufte-chart            → render the result
 ```
-
----
-
-## Core Principles
-
-All skills are grounded in Tufte's six principles of graphical integrity:
-
-1. **Proportional Representation** — Visual magnitude = data magnitude
-2. **Clear Labeling** — Every element unambiguous and spelled out
-3. **Data Variation, Not Design Variation** — Visual changes reflect data
-4. **Deflated Monetary Units** — Inflation-adjusted constants for time-series
-5. **Matched Dimensions** — Graphic dimensions ≤ data dimensions
-6. **Data Context** — Never quote data out of context
 
 ---
 
