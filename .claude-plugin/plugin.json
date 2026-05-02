@@ -1,0 +1,36 @@
+{
+  "name": "tufte-vdqi",
+  "version": "1.0.0",
+  "description": "Edward Tufte's Visual Display of Quantitative Information - 10 executable skills for data visualization excellence including lie factor detection, graphical assessment, chartjunk removal, and design optimization.",
+  "keywords": [
+    "data-visualization",
+    "tufte",
+    "graphics",
+    "design",
+    "data-ink-ratio",
+    "visual-display",
+    "lie-factor",
+    "chartjunk",
+    "small-multiples",
+    "graphical-excellence"
+  ],
+  "categories": ["Data Visualization", "Design", "Analytics"],
+  "skills": [
+    "orchestrate-tufte-vdqi",
+    "calculate-lie-factor",
+    "assess-graphical-excellence",
+    "erase-non-data-ink",
+    "erase-redundant-data-ink",
+    "standardize-monetary-units",
+    "generate-range-frames",
+    "integrate-text-and-graphic",
+    "construct-small-multiples",
+    "render-tufte-chart"
+  ],
+  "entry_point": "orchestrate-tufte-vdqi",
+  "documentation": {
+    "readme": "README.md",
+    "usage": "USAGE_GUIDE.md",
+    "examples": "examples/workflow-examples.md"
+  }
+}
