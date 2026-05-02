@@ -22,12 +22,16 @@ Every chart your agent produces gets scored against Tufte's principles — lie f
 <th align="center">After</th>
 </tr>
 <tr>
-<td><img src="examples/birds-before.webp" alt="Before: colorful bar chart with bird illustrations, inconsistent colors, decorative clutter" width="380" /></td>
-<td><img src="examples/birds-after.svg" alt="After: Tufte-styled Cleveland dot plot on a log scale, minimal ink, data speaks for itself" width="380" /></td>
+<td><img src="examples/before-1.webp" alt="Before: colorful bar chart with bird illustrations, inconsistent colors, decorative clutter" width="380" /></td>
+<td><img src="examples/after-1.svg" alt="After: Tufte-styled Cleveland dot plot on a log scale, minimal ink, data speaks for itself" width="380" /></td>
+</tr>
+<tr>
+<td><img src="examples/before-2.webp" alt="Before: colorful bar chart of SWE-bench scores with arbitrary color coding and no confidence intervals shown" width="380" /></td>
+<td><img src="examples/after-2.svg" alt="After: Cleveland dot plot with 95% confidence intervals — the overlapping ranges tell the real story" width="380" /></td>
 </tr>
 </table>
 
-Same data. No bird illustrations, no rainbow bars, no chartjunk. A Cleveland dot plot on a log scale that lets the six-order-of-magnitude spread speak for itself.
+Same data, both times. No decorative bars, no arbitrary colors. Cleveland dot plots that let the actual signal — and the uncertainty — speak for itself.
 
 ---
 
