@@ -14,6 +14,23 @@ Every chart your agent produces gets scored against Tufte's principles — lie f
 
 ---
 
+## Before / After
+
+<table>
+<tr>
+<th align="center">Before</th>
+<th align="center">After</th>
+</tr>
+<tr>
+<td><img src="examples/birds-before.webp" alt="Before: colorful bar chart with bird illustrations, inconsistent colors, decorative clutter" width="380" /></td>
+<td><img src="examples/birds-after.svg" alt="After: Tufte-styled Cleveland dot plot on a log scale, minimal ink, data speaks for itself" width="380" /></td>
+</tr>
+</table>
+
+Same data. No bird illustrations, no rainbow bars, no chartjunk. A Cleveland dot plot on a log scale that lets the six-order-of-magnitude spread speak for itself.
+
+---
+
 ## Install
 
 **Individual (Claude Code)**
