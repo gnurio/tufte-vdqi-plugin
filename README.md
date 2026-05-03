@@ -121,4 +121,4 @@ render-tufte-chart            → render the result
 
 ## License
 
-Based on Edward Tufte's *The Visual Display of Quantitative Information* and subsequent works. MIT License.
+Concepts in this project were inspired by *The Visual Display of Quantitative Information* by Edward Tufte. No text has been reproduced.
