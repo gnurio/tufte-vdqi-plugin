@@ -42,7 +42,7 @@ def render(data, title, series="", subtitle="", width=760, height=420):
 
     svg = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
-      f'font-family="ET-Bembo, Palatino, Georgia, serif" font-size="13">',
+      f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="13">',
       f'<rect width="{width}" height="{height}" fill="white"/>',
       f'<text x="{ml}" y="28" font-size="17">{title}</text>',
     ]

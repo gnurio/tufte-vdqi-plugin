@@ -65,10 +65,11 @@ Three skills, one shared reference. The router picks between the two action skil
 | `assess-graphical-excellence` | Scores a graphic against Tufte's nine criteria, computes the lie factor, and returns prioritised fixes tagged with the remedy (B1–B7) needed to apply them. |
 | `render-tufte-chart` | Produces an actual SVG using range-frame axes, direct end labels, no gridlines, and honest proportions. Ships a working `render_line_svg.py` for line charts and a build checklist for bars / scatters / small multiples. |
 
-Ships with one helper script per action skill:
+Ships with helper scripts and the [tufte-css](https://github.com/edwardtufte/tufte-css) typography bundle (MIT, vendored under `skills/render-tufte-chart/assets/tufte-css/`):
 
 - `assess-graphical-excellence/scripts/deflate.py` — inflation adjustment for monetary time series. Requires real CPI values; errors on a missing year rather than guessing.
 - `render-tufte-chart/scripts/render_line_svg.py` — Tufte-style SVG line chart with range-frame axes and direct end labels.
+- `render-tufte-chart/scripts/wrap_html.py` — wraps any SVG in a Tufte-styled HTML page using the vendored ET Book typography; copies the stylesheet and fonts next to the output so it opens in any browser with no network.
 
 ---
 
@@ -112,6 +113,13 @@ assess-graphical-excellence   → (optional) confirm the result scores well
 ```
 deflate.py (B7)               → convert to real <base-year> dollars first
 render-tufte-chart            → plot the real-terms series with a labelled axis
+```
+
+### "Give me a shareable Tufte-styled web page, not just an SVG"
+```
+render-tufte-chart            → produces chart.svg
+wrap_html.py                  → wraps it in a tufte-css page (ET Book typography)
+                                → outputs chart.html + ./tufte-assets/ siblings
 ```
 
 ---

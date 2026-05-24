@@ -53,6 +53,27 @@ file. A minimal pattern: white canvas, thin dark data marks, range-frame axis
 lines with end labels, category/series text placed on the marks, no grid/box.
 For small multiples, lay out a grid of identical mini-charts sharing one scale.
 
+## Optional: Tufte-styled HTML page
+
+For a page that surrounds the chart with ET Book typography (and optional lede
+text or caption), wrap the SVG with `scripts/wrap_html.py`. It uses the bundled
+tufte-css (`assets/tufte-css/`, MIT-licensed) and copies the stylesheet and
+fonts into a sibling `tufte-assets/` directory the first time so the result
+opens correctly in any browser with no network:
+
+```
+python scripts/wrap_html.py \
+  --svg chart.svg --out chart.html \
+  --title "Revenue, 2000–2023" \
+  --caption "Inflation-adjusted to 2023 USD using BLS CPI-U."
+```
+
+Use the SVG output when you need a portable single file (charts in a paper, a
+slide deck, another site). Use the HTML wrapper when you want a self-contained,
+browser-ready Tufte page (sharing a link, hosting a report). Pass `--no-assets`
+if the page will be served from a site that already publishes `tufte.css` at
+the expected path.
+
 Always save the file and tell the user its path. Where useful, follow up with
 `assess-graphical-excellence` to confirm the result scores well.
 
