@@ -46,15 +46,27 @@ Read `references/tufte-principles.md` first. The workflow uses every part of it.
      exceeds data dimensionality)
    - **Decoration** (ornament that carries no information)
 
-4. **Check chart-genre fit** (Part C, Part G). Could this graphic be:
-   - A **table** instead? (≤20 numbers ⇒ default to table; "a table is nearly
-     always better than a dumb pie chart" — VDQI p.56)
-   - **Small multiples** instead? (many series; "inevitably comparative")
-   - A **range frame** instead of a bordered scatter? (scatter/line on padded
-     axes)
-   - A **quartile plot** instead of a boxed box plot?
-   - A **white-grid bar chart** instead of gridded bars?
-   Name the genre to switch to, and cite the VDQI page.
+4. **Rank candidate genres and challenge the default** (Part C, Part G). List
+   at least three Tufte genres that could fit the data, ranked by fit. Then
+   apply the **default-challenge rule**:
+
+   > If your top-ranked genre is also what an unprompted Claude would pick
+   > (line, bar, dot plot, scatter, pie), you MUST do one of:
+   > (a) explicitly justify it by citing what the alternatives lose, OR
+   > (b) reach for a second-line VDQI move (supertable, table-graphic,
+   >     sparkline, dot-dash plot, quartile plot, small multiples) and explain
+   >     why it is the stronger fit here.
+   >
+   > Quiet defaulting to the obvious chart is the failure mode this rule
+   > exists to catch.
+
+   Common multi-answer data shapes (flag these in the output so render knows
+   to emit alternatives):
+   - **1 number / single ratio** → prose statement + tiny inline visual
+   - **≤20 numbers** → supertable + Tufte chart (VDQI p.56)
+   - **Many series of one x** → small multiples + overplotted comparison
+   - **Distributions across groups** → quartile plot + strip plot or histogram
+   - **Bivariate scatter** → range frame + dot-dash marginal variant
 
 5. **Compute the weighted overall score**. Weights: integrity 3×,
    proportionality 2×, data-ink 2×, typography 0.5×, the rest 1×.
@@ -86,9 +98,14 @@ Context: <purpose / audience, or stated assumption>
 Lie factor: <value or "n/a"> — <interpretation>
 Resembles: <named VDQI case from Part E, or "no close analogue">
 
-### Genre fit
-Current form: <bar/line/pie/scatter/infographic>
-Better form per VDQI: <Part C genre + page, or "current form is appropriate">
+### Genres considered (ranked)
+1. <Part-C genre> — <why it fits this data>
+2. <Part-C genre> — <why>
+3. <Part-C genre> — <why>
+
+Chosen: <genre>. Default-challenge: <if the chosen genre is what unprompted Claude would also pick, justify here by citing what the alternatives lose; otherwise note "second-line VDQI move — stronger fit than the default chart">.
+
+Multi-render trigger: <one of the data shapes from step 4, e.g. "≤20 numbers ⇒ supertable + chart" — or "none, single canonical render">
 
 ### Overall: <weighted score>/10 — <one-sentence verdict>
 

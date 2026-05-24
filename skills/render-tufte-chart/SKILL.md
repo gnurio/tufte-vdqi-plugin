@@ -53,6 +53,27 @@ following Part C's recipe.
 If the data is ≤20 numbers, **prefer a table** (VDQI p.56) — say so to the user
 before rendering. If forced to graph, use C6 supertable, not pie/bar.
 
+## Multi-render rule (when to produce N alternatives)
+
+When the assess step flagged a "Multi-render trigger" (data shape with more
+than one correct Tufte answer), **render both alternatives side-by-side** in
+one output, then let the user pick. This is the discipline that prevents
+quiet defaulting to the obvious genre.
+
+| Data shape | Render BOTH |
+|---|---|
+| 1 number / single ratio | (a) a one-sentence prose statement with the number inline, and (b) a tiny inline visual — a one-row proportion bar or a small two-color dot square |
+| ≤20 numbers | (a) a C6 supertable (with optional table-graphic sparkline column), and (b) a single Tufte chart (C8 + C2 range-frame dot plot, or C9 white-grid bar) |
+| Many series of one x | (a) a C5 small-multiples grid, and (b) an overplotted line/dot chart with direct end-labels |
+| Distributions across groups | (a) a C1 quartile plot, and (b) a strip plot or histogram |
+| Bivariate scatter | (a) a C2 range frame, and (b) the C3 dot-dash variant adding marginals |
+
+For all other data shapes, render one canonical Tufte form (don't manufacture
+alternatives when one obviously dominates). When emitting both alternatives,
+state in one sentence why each exists and what to look at in each — the goal
+is letting the reader see the toolkit's range, not flooding them with
+near-duplicates.
+
 ## How to render
 
 ### Line / time-series (C10)
