@@ -1,29 +1,38 @@
 {
-  "name": "tufte-vdqi",
+  "name": "tufte-vdqi-marketplace",
   "owner": {
     "name": "George Nurijanian"
   },
   "plugins": [
     {
       "name": "tufte-vdqi",
-      "source": "./",
       "description": "Edward Tufte's Visual Display of Quantitative Information — three executable skills (route, assess, render) backed by a VDQI-sourced principles reference. Scores graphics against Tufte's nine criteria with named chartjunk species and a 13-entry catalogue of dissected failures, and renders per-genre charts (time-series, small multiples, quartile plot, range-frame scatter) plus a tufte-css HTML wrapper.",
-      "version": "3.0.0",
-      "homepage": "https://github.com/gnurio/tufte-vdqi-plugin",
-      "repository": "https://github.com/gnurio/tufte-vdqi-plugin",
-      "keywords": [
-        "data-visualization",
-        "tufte",
-        "graphics",
-        "design",
-        "data-ink-ratio",
-        "visual-display",
-        "lie-factor",
-        "chartjunk",
-        "small-multiples",
-        "graphical-excellence"
-      ],
-      "category": "Data Visualization"
+    "version": "3.0.0",
+    "source": "./",
+    "strict": false,
+    "skills": [
+      "./skills/orchestrate-tufte-vdqi",
+      "./skills/assess-graphical-excellence",
+      "./skills/render-tufte-chart"
+    ],
+    "author": {
+      "name": "George Nurijanian"
+    },
+    "homepage": "https://github.com/gnurio/tufte-vdqi-plugin",
+    "repository": "https://github.com/gnurio/tufte-vdqi-plugin",
+    "keywords": [
+      "data-visualization",
+      "tufte",
+      "graphics",
+      "design",
+      "data-ink-ratio",
+      "visual-display",
+      "lie-factor",
+      "chartjunk",
+      "small-multiples",
+      "graphical-excellence"
+    ],
+    "category": "Data Visualization"
     }
   ]
 }
