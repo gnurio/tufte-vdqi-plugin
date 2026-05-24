@@ -1,190 +1,71 @@
 ---
 name: assess-graphical-excellence
-description: Evaluate a graphic against Tufte's nine criteria for graphical excellence
+description: Evaluate a data graphic against Tufte's nine criteria, quantify any visual distortion (lie factor), and return prioritised, concrete fixes. Use whenever someone asks whether a chart is good, what is wrong with a chart, how to clean up or declutter a chart, whether a graphic is misleading, or for any Tufte-style critique of an existing visualization.
 ---
 
 # Assess Graphical Excellence
 
-## Quick Start
-Invoke with: `/assess-graphical-excellence` and provide the required inputs.
+This is the assessment hub of the Tufte toolkit. It scores an existing graphic,
+explains why, and — most importantly — hands back the exact remedy for every
+problem so the reader (or a follow-up render step) knows precisely what to change.
 
-## Purpose
-Evaluate a graphic against Tufte's nine criteria for graphical excellence
+It also absorbs lie-factor analysis, which used to be a separate skill: distortion
+is just the integrity criterion, so it is computed here directly.
 
-## Inputs
-- **graphic_description** (`string`): Description of the graphic to evaluate
-- **context** (`string`): Purpose and audience of the graphic
+## What you need from the user
 
-## Outputs
-- **scores** (`object`): Scores (0-10) for each of 9 criteria
-- **overall_score** (`number`): Weighted overall score
-- **recommendations** (`array`): Priority-ordered improvements
+A description (or image, or file) of the graphic, and ideally its purpose and
+audience. If something essential is missing, infer reasonably and state the
+assumption rather than stalling.
 
-## Decision Logic
+## How to assess
 
-Evaluate the graphic against Tufte's 9 criteria, scoring each 0-10:
+Read `references/tufte-principles.md`. Part A lists the nine criteria, their
+weights, and the remedy each maps to; Part B holds the remedy procedures.
 
-1. **Integrity** (weight: 3x) — Truthful, proportional representation?
-   - Check for lie factor violations
-   - Truncated axes
-   - Missing context
+1. Score each of the nine criteria 0–10. Justify every score with a specific
+   observation about *this* graphic — never a generic statement. Unsupported
+   scores are the main failure mode of a weak assessment.
+2. If any magnitude looks exaggerated (truncated axis, 3-D/area encoding, a
+   dramatic-looking small change), compute the **lie factor** per remedy B1:
+   `lie_factor = visual_change_% / data_change_%`, acceptable only in 0.95–1.05.
+   Report the number and what it means.
+3. Compute the weighted overall score (integrity 3×, proportionality 2×,
+   data-ink 2×, typography 0.5×, the rest 1×).
+4. Translate each weak score into a recommendation, and tag it with the remedy
+   number from Part B (e.g. "B1 — zero the bar baseline", "B4 — move the legend
+   onto the lines"). The tag is how the model and the user know *how* to fix it,
+   and it is what a downstream `render-tufte-chart` step follows.
 
-2. **Data-Ink Ratio** (weight: 2x) — Maximize data-carrying ink?
-   - Remove chartjunk
-   - Eliminate redundant encoding
+If the graphic plots a multi-year currency series, check remedy B7: nominal
+dollars across years are an integrity/context problem, and you can use
+`scripts/deflate.py` (in this skill folder) to produce the real-terms values.
 
-3. **Data Density** (weight: 1x) — High information per square inch?
-   - Small multiples
-   - Compact display
+## Output format
 
-4. **Clarity** (weight: 1x) — Unambiguous display?
-   - Clear labels
-   - Readable typography
+```
+## Assessment: <graphic>
+Context: <purpose / audience, or stated assumption>
 
-5. **Proportionality** (weight: 2x) — Visual magnitude = data magnitude?
-   - Accurate scaling
-   - No 2D/3D area distortions
+### Scores
+<one line per criterion: name — score/10 — specific justification>
 
-6. **Context** (weight: 1x) — Data in appropriate context?
-   - Full time series shown
-   - Comparisons provided
+### Distortion check
+Lie factor: <value or "n/a"> — <interpretation>
 
-7. **Minimal Ink** (weight: 1x) — No redundant encoding?
-   - Each datum encoded once
-   - Range frames vs full boxes
+### Overall: <weighted score>/10 — <one-sentence verdict>
 
-8. **Typography** (weight: 0.5x) — Clear, readable labels?
-   - Font choices
-   - Label placement
-
-9. **Integration** (weight: 1x) — Words, numbers, pictures combined?
-   - Direct labeling
-   - No separate legends
-
-Overall score = weighted average of all criteria.
-Recommendations prioritized by impact on integrity and data-ink ratio.
-
-## Success Criteria
-All 9 criteria assessed with specific observations justifying scores
-
-## Failure Modes
-- Missing criteria in assessment
-- Scores not justified
-- Confusing design flaws with integrity violations
-
-## Edge Cases
-- Graphics with unconventional but effective designs
-- Culturally specific visualization norms
-
-## Examples
-
-### Example 1: Excellent Chart
-Input: Time-series with thin line, range-frame, no grid, direct labels
-Output: scores={integrity:10, data_ink_ratio:9, ...}, overall_score:8.9, recommendations:[]
-
-### Example 2: Chart with Lie Factor Violation
-Input: Bar chart showing 53% as 783% visual increase
-Output: scores={integrity:2, proportionality:1, ...}, overall_score:4.1, recommendations:["Fix lie factor", "Show full axis"]
-
-## Implementation
-
-```python
-def assess_graphical_excellence(graphic_description, context):
-    """
-    Assess a graphic against Tufte's 9 criteria for graphical excellence.
-    
-    Returns scores (0-10), overall weighted score, and recommendations.
-    """
-    # Keywords for detection
-    integrity_issues = ["truncated", "lie factor", "3D", "distorted", "misleading"]
-    high_data_ink = ["thin line", "range-frame", "no grid", "minimal"]
-    low_data_ink = ["heavy grid", "3D", "shadow", "decorative", "chartjunk"]
-    
-    scores = {
-        "integrity": 10,
-        "data_ink_ratio": 5,
-        "data_density": 5,
-        "clarity": 5,
-        "proportionality": 10,
-        "context": 5,
-        "minimal_ink": 5,
-        "typography": 5,
-        "integration": 5
-    }
-    
-    desc_lower = graphic_description.lower()
-    
-    # Assess integrity
-    if any(issue in desc_lower for issue in ["truncated", "lie factor", "783"]):
-        scores["integrity"] = 2
-        scores["proportionality"] = 1
-    elif "3D" in graphic_description:
-        scores["integrity"] = 5
-        scores["proportionality"] = 4
-    
-    # Assess data-ink ratio
-    if any(feature in desc_lower for feature in high_data_ink):
-        scores["data_ink_ratio"] = 9
-        scores["minimal_ink"] = 9
-    elif any(feature in desc_lower for feature in low_data_ink):
-        scores["data_ink_ratio"] = 3
-        scores["minimal_ink"] = 3
-    
-    # Assess clarity and integration
-    if "direct label" in desc_lower or "integrated" in desc_lower:
-        scores["clarity"] = 9
-        scores["integration"] = 9
-    elif "legend" in desc_lower and "separate" in desc_lower:
-        scores["integration"] = 4
-    
-    # Assess data density
-    if "small multiples" in desc_lower or "high density" in desc_lower:
-        scores["data_density"] = 9
-    
-    # Assess typography
-    if "clear" in desc_lower or "readable" in desc_lower:
-        scores["typography"] = 8
-    
-    # Assess context
-    if "context" in desc_lower or "full series" in desc_lower:
-        scores["context"] = 8
-    
-    # Calculate weighted overall score
-    weights = {
-        "integrity": 3,
-        "data_ink_ratio": 2,
-        "data_density": 1,
-        "clarity": 1,
-        "proportionality": 2,
-        "context": 1,
-        "minimal_ink": 1,
-        "typography": 0.5,
-        "integration": 1
-    }
-    
-    total_weight = sum(weights.values())
-    overall = sum(scores[k] * weights[k] for k in scores) / total_weight
-    
-    # Generate recommendations based on low scores
-    recommendations = []
-    if scores["integrity"] < 5:
-        recommendations.append("Fix lie factor - show proportional visual change")
-        recommendations.append("Use consistent scale")
-    if scores["data_ink_ratio"] < 5:
-        recommendations.append("Remove chartjunk")
-        recommendations.append("Increase data-ink ratio")
-    if scores["integration"] < 5:
-        recommendations.append("Move labels onto data")
-    
-    return {
-        "scores": scores,
-        "overall_score": round(overall, 1),
-        "recommendations": recommendations
-    }
+### Fixes (highest impact first)
+1. <remedy tag> — <concrete change>
+2. ...
 ```
 
-## Related Skills
-- calculate-lie-factor
-- erase-non-data-ink
-- construct-small-multiples
-- integrate-text-and-graphic
+## What good looks like
+
+All nine criteria scored with chart-specific evidence; distortion quantified when
+present; recommendations ordered by impact and each tied to a named remedy the
+reader can act on. Avoid vague praise and avoid listing problems without their fix.
+
+## Related skills
+- `render-tufte-chart` — rebuild the graphic so it satisfies these criteria.
+- `orchestrate-tufte-vdqi` — routes here for evaluation, then to render for the fix.

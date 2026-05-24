@@ -1,124 +1,45 @@
 ---
 name: orchestrate-tufte-vdqi
-description: Intelligent router for the Tufte VDQI skill network. Analyzes data visualization requests and routes to the right entry-point skill for assessment, design, or optimization. Use whenever you need help with data visualization and aren't sure which specific Tufte skill to invoke.
+description: Router for the Tufte data-visualization toolkit. Use whenever someone has a chart or data-visualization request and you are not sure which Tufte skill to use — it decides between assessing an existing graphic, producing a new one, or fixing a cluttered/misleading one, and chains them when needed.
 ---
 
 # Orchestrate Tufte VDQI
 
-Intelligent router for Tufte's Visual Display of Quantitative Information skills.
+You are the router. Read the request, decide the intent, and invoke the right
+skill. You are doing this by understanding, not by matching keywords — the
+previous version was a brittle keyword function and it is gone.
 
-## How It Works
+## The toolkit (three skills + one reference)
 
-1. **Detects intent** — Assessment, design, or optimization?
-2. **Routes to skills** — Picks the right entry-point skill
-3. **Chains workflows** — Connects multiple skills for complex tasks
-4. **Accumulates context** — Maintains coherence across iterations
+- `assess-graphical-excellence` — evaluate an existing graphic against Tufte's
+  nine criteria, quantify distortion (lie factor is built in here), and return
+  prioritised fixes. The default when intent is unclear.
+- `render-tufte-chart` — produce an actual chart file (SVG/HTML) that obeys the
+  principles. The only skill that outputs a chart.
+- `assess-graphical-excellence/references/tufte-principles.md` — the canonical
+  encoding of every Tufte technique. The seven former micro-skills (lie factor,
+  range frames, small multiples, integrate text, erase non-data-ink, erase
+  redundant ink, standardize monetary units) were folded into this one file as
+  remedies B1–B7; both action skills consult it. There is nothing else to route
+  to for those techniques — apply them via assess (to recommend) or render (to build).
 
-## Skill Network (8 Skills)
+## Routing
 
-### Assessment Skills
-- `assess-graphical-excellence` — Evaluate against 9 Tufte criteria
-- `calculate-lie-factor` — Detect visual distortion
+- **Evaluate / critique** ("is this chart any good?", "what's wrong with this?",
+  "is this misleading?") → `assess-graphical-excellence`.
+- **Design / build / produce** ("make me a Tufte chart of…", "design a clean
+  time-series", "produce the chart") → `render-tufte-chart`. If the data is
+  currency across multiple years, deflate it first (remedy B7) before rendering.
+- **Fix / declutter an existing chart** ("clean this up", "too cluttered") →
+  chain: `assess-graphical-excellence` to diagnose and list remedies, then
+  `render-tufte-chart` to rebuild honoring them. The assessment's remedy tags
+  (B1–B7) are the instructions render follows.
+- **Unsure** → start with `assess-graphical-excellence`.
 
-### Design Skills
-- `construct-small-multiples` — Create comparative grids
-- `generate-range-frames` — Trim axes to data bounds
-- `integrate-text-and-graphic` — Merge labels into graphics
+## Why this shape
 
-### Optimization Skills
-- `erase-non-data-ink` — Remove decorative elements
-- `erase-redundant-data-ink` — Remove duplicate encodings
-- `standardize-monetary-units` — Adjust for inflation
-
-## Routing Logic
-
-```
-IF user wants to EVALUATE a graphic:
-  → assess-graphical-excellence
-  → calculate-lie-factor (if distortion suspected)
-
-IF user wants to DESIGN a graphic:
-  → construct-small-multiples (if comparing categories)
-  → generate-range-frames (for axes)
-  → integrate-text-and-graphic (for labeling)
-
-IF user wants to OPTIMIZE a graphic:
-  → erase-non-data-ink (remove decoration)
-  → erase-redundant-data-ink (remove duplication)
-  → standardize-monetary-units (if time-series money)
-
-IF user is UNSURE:
-  → Start with assess-graphical-excellence
-```
-
-## Workflows
-
-### "Is this graphic any good?"
-```
-assess-graphical-excellence → calculate-lie-factor → recommendations
-```
-
-### "I need to design a time-series"
-```
-standardize-monetary-units (if monetary) → generate-range-frames → integrate-text-and-graphic
-```
-
-### "This chart feels cluttered"
-```
-assess-graphical-excellence → erase-non-data-ink → erase-redundant-data-ink → reassess
-```
-
-## Implementation
-
-```python
-def orchestrate_tufte_vdqi(request, graphic_description=None, data=None):
-    """
-    Route visualization requests to appropriate Tufte VDQI skills.
-    
-    Returns workflow recommendation and skill sequence.
-    """
-    request_lower = request.lower()
-    
-    # Detect intent
-    is_assessment = any(word in request_lower for word in ["evaluate", "assess", "check", "review", "good", "bad"])
-    is_design = any(word in request_lower for word in ["design", "create", "build", "make", "new"])
-    is_optimize = any(word in request_lower for word in ["optimize", "improve", "fix", "clean", "declutter", "better"])
-    
-    # Check for specific needs
-    has_money = any(word in request_lower for word in ["money", "dollar", "revenue", "cost", "price", "inflation"])
-    has_time = any(word in request_lower for word in ["time", "year", "month", "trend", "series"])
-    has_comparison = any(word in request_lower for word in ["compare", "multiple", "category", "region", "group"])
-    
-    workflow = []
-    
-    if is_assessment:
-        workflow.append("assess-graphical-excellence")
-        if graphic_description and ("distort" in request_lower or "3D" in str(graphic_description)):
-            workflow.append("calculate-lie-factor")
-    
-    elif is_design:
-        if has_comparison:
-            workflow.append("construct-small-multiples")
-        if has_money and has_time:
-            workflow.append("standardize-monetary-units")
-        workflow.append("generate-range-frames")
-        workflow.append("integrate-text-and-graphic")
-    
-    elif is_optimize:
-        workflow.append("assess-graphical-excellence")
-        workflow.append("erase-non-data-ink")
-        workflow.append("erase-redundant-data-ink")
-        if has_money and has_time:
-            workflow.append("standardize-monetary-units")
-        workflow.append("assess-graphical-excellence")  # Re-assess
-    
-    else:
-        # Default: assessment
-        workflow.append("assess-graphical-excellence")
-    
-    return {
-        "detected_intent": "assessment" if is_assessment else "design" if is_design else "optimization" if is_optimize else "unknown",
-        "recommended_workflow": workflow,
-        "rationale": f"Based on keywords in request: intent={is_assessment or is_design or is_optimize}"
-    }
-```
+Earlier this toolkit had nine skills. Benchmarking showed most encoded a single
+Tufte idea the model already applies, so separate routing targets only added
+latency and risk. Assessment and rendering are the two actions that genuinely
+benefit from a skill; everything else is shared knowledge in the principles
+reference. Keep routing to these two actions and let the reference carry the rest.

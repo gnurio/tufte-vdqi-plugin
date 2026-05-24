@@ -10,7 +10,7 @@
 
 ---
 
-Every chart your agent produces gets scored against Tufte's principles — lie factor measured, chartjunk stripped, redundant ink removed, labels moved inline, axes replaced with range-frames, monetary values inflation-adjusted, and the result rendered as clean HTML. Not as a suggestion. As a workflow.
+Every chart your agent produces gets scored against Tufte's principles — lie factor measured, chartjunk stripped, redundant ink removed, labels moved inline, axes replaced with range-frames, monetary values inflation-adjusted, and the result rendered as a clean SVG. Not as a suggestion. As a workflow.
 
 ---
 
@@ -57,18 +57,18 @@ Same data, both times. No decorative bars, no arbitrary colors. Cleveland dot pl
 
 ## Skills
 
+Three skills, one shared reference. The router picks between the two action skills; the principles file is the canonical encoding of every Tufte technique (lie factor, range frames, small multiples, integrated labels, non-data-ink, redundant ink, monetary deflation) and is read by both actions.
+
 | Skill | What it does |
 |-------|-------------|
-| `orchestrate-tufte-vdqi` | Describe your chart challenge — gets routed to the right skills automatically |
-| `assess-graphical-excellence` | Score a graphic against Tufte's nine criteria for graphical excellence |
-| `calculate-lie-factor` | Measure the ratio of visual distortion to actual data change |
-| `erase-non-data-ink` | Remove decoration, borders, and fills that carry no information |
-| `erase-redundant-data-ink` | Eliminate repeated encodings of the same datum |
-| `standardize-monetary-units` | Convert nominal dollars to inflation-adjusted constants for time-series |
-| `generate-range-frames` | Replace rectangular plot frames with range-frames that span actual data |
-| `integrate-text-and-graphic` | Place labels and captions directly in the plotting field |
-| `construct-small-multiples` | Compose paneled graphics sharing a design, varying one variable |
-| `render-tufte-chart` | Render data as a complete Tufte-styled HTML chart with inline CSS |
+| `orchestrate-tufte-vdqi` | Routes a request to assess, render, or both. Use it when you're unsure where to start. |
+| `assess-graphical-excellence` | Scores a graphic against Tufte's nine criteria, computes the lie factor, and returns prioritised fixes tagged with the remedy (B1–B7) needed to apply them. |
+| `render-tufte-chart` | Produces an actual SVG using range-frame axes, direct end labels, no gridlines, and honest proportions. Ships a working `render_line_svg.py` for line charts and a build checklist for bars / scatters / small multiples. |
+
+Ships with one helper script per action skill:
+
+- `assess-graphical-excellence/scripts/deflate.py` — inflation adjustment for monetary time series. Requires real CPI values; errors on a missing year rather than guessing.
+- `render-tufte-chart/scripts/render_line_svg.py` — Tufte-style SVG line chart with range-frame axes and direct end labels.
 
 ---
 
@@ -80,10 +80,9 @@ Start with the orchestrator — it detects your intent and routes you:
 /orchestrate-tufte-vdqi
 ```
 
-Or invoke skills directly:
+Or invoke an action skill directly:
 
 ```
-/calculate-lie-factor
 /assess-graphical-excellence
 /render-tufte-chart
 ```
@@ -92,29 +91,27 @@ Or invoke skills directly:
 
 ## Common workflows
 
-### "My chart looks wrong"
+### "Is this chart any good?"
 ```
-assess-graphical-excellence   → find what's failing
-calculate-lie-factor          → check for distortion
-erase-non-data-ink            → strip the decoration
-erase-redundant-data-ink      → simplify the encoding
+assess-graphical-excellence   → nine-criteria scores, lie factor, prioritised fixes (B1–B7)
 ```
 
-### "I need to redesign a chart from scratch"
+### "Fix this cluttered or misleading chart"
 ```
-assess-graphical-excellence   → baseline score
-generate-range-frames         → replace the heavy frame
-integrate-text-and-graphic    → move labels inline
-construct-small-multiples     → if comparing across groups
-render-tufte-chart            → output clean HTML
+assess-graphical-excellence   → diagnose and emit remedies
+render-tufte-chart            → rebuild honoring those remedies
 ```
 
-### "My data has monetary values over time"
+### "Design a chart from scratch"
 ```
-standardize-monetary-units    → inflation-adjust first
-generate-range-frames         → clean the axes
-integrate-text-and-graphic    → direct labeling
-render-tufte-chart            → render the result
+render-tufte-chart            → produces an SVG that bakes in B1–B7 by construction
+assess-graphical-excellence   → (optional) confirm the result scores well
+```
+
+### "My data is currency across multiple years"
+```
+deflate.py (B7)               → convert to real <base-year> dollars first
+render-tufte-chart            → plot the real-terms series with a labelled axis
 ```
 
 ---
