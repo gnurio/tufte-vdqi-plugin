@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Wrap a Tufte-style SVG in an HTML page that uses tufte-css typography
-(ET Book font, generous margins, optional margin notes).
+Wrap a Tufte-style SVG in an HTML page that uses the brand stylesheet
+(ABC Favorit typography, black canvas, generous margins).
 
 Inputs an existing .svg file (typically produced by render_line_svg.py or
 written by hand following the build checklist). Outputs an .html page that
 inlines the SVG inside an <article>/<figure class="fullwidth"> and links to
-the vendored tufte.css next to it. Copies tufte.css + the et-book/ fonts into
-a sibling `tufte-assets/` directory the first time so the page renders
+the vendored brand.css next to it. Copies brand.css + the favorit/ fonts into
+a sibling `brand-assets/` directory the first time so the page renders
 correctly when opened locally with no network.
 
 Usage:
@@ -18,35 +18,35 @@ Usage:
     [--intro "Optional lede paragraph above the figure."]
 
 Add `--no-assets` to skip the asset copy (use when the page is being served
-from a site that already publishes tufte.css at the expected path).
+from a site that already publishes brand.css at the expected path).
 """
 import argparse, os, shutil, sys
 from html import escape
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-VENDORED_CSS_DIR = SCRIPT_DIR.parent / "assets" / "tufte-css"
-ASSETS_SUBDIR = "tufte-assets"
+VENDORED_CSS_DIR = SCRIPT_DIR.parent / "assets" / "brand-css"
+ASSETS_SUBDIR = "brand-assets"
 
 
 def ensure_assets(out_html: Path) -> str:
-    """Copy tufte.css and et-book/ next to the output HTML if missing. Returns
+    """Copy brand.css and favorit/ next to the output HTML if missing. Returns
     the relative href to use in the <link> tag."""
     dest = out_html.parent / ASSETS_SUBDIR
     dest.mkdir(parents=True, exist_ok=True)
-    css_src = VENDORED_CSS_DIR / "tufte.css"
-    fonts_src = VENDORED_CSS_DIR / "et-book"
+    css_src = VENDORED_CSS_DIR / "brand.css"
+    fonts_src = VENDORED_CSS_DIR / "favorit"
     if not css_src.exists() or not fonts_src.exists():
         raise FileNotFoundError(
-            f"Vendored tufte-css not found at {VENDORED_CSS_DIR}. "
+            f"Vendored brand-css not found at {VENDORED_CSS_DIR}. "
             "The skill ships these assets — reinstall the plugin or restore them.")
-    css_dest = dest / "tufte.css"
+    css_dest = dest / "brand.css"
     if not css_dest.exists():
         shutil.copy2(css_src, css_dest)
-    fonts_dest = dest / "et-book"
+    fonts_dest = dest / "favorit"
     if not fonts_dest.exists():
         shutil.copytree(fonts_src, fonts_dest)
-    return f"{ASSETS_SUBDIR}/tufte.css"
+    return f"{ASSETS_SUBDIR}/brand.css"
 
 
 def strip_xml_decl(svg: str) -> str:
@@ -67,10 +67,10 @@ def build_html(title: str, intro: str, svg: str, caption: str, css_href: str) ->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{escape(title) if title else 'Tufte chart'}</title>
+<title>{escape(title) if title else 'Chart'}</title>
 <link rel="stylesheet" href="{escape(css_href)}">
 <style>
-  /* let the chart breathe inside tufte-css's narrow column */
+  /* let the chart span the full width set by the brand stylesheet */
   figure.fullwidth svg {{ display: block; width: 100%; height: auto; }}
 </style>
 </head>
@@ -97,7 +97,7 @@ def main() -> None:
     p.add_argument("--caption", default="", help="figcaption text under the chart")
     p.add_argument("--intro", default="", help="optional lede paragraph above the figure")
     p.add_argument("--no-assets", action="store_true",
-                   help="skip copying tufte.css and et-book/ next to the output")
+                   help="skip copying brand.css and favorit/ next to the output")
     a = p.parse_args()
 
     try:
@@ -109,7 +109,7 @@ def main() -> None:
     out_html = Path(a.out)
     out_html.parent.mkdir(parents=True, exist_ok=True)
     try:
-        css_href = (f"{ASSETS_SUBDIR}/tufte.css" if a.no_assets
+        css_href = (f"{ASSETS_SUBDIR}/brand.css" if a.no_assets
                     else ensure_assets(out_html))
     except (OSError, FileNotFoundError) as e:
         print(f"ERROR: {e}", file=sys.stderr)

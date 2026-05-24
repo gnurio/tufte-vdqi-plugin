@@ -1,0 +1,63 @@
+/* Brand stylesheet for the render-tufte-chart skill HTML wrapper.
+   Black background, white text, ABC Favorit typography.
+   Replaces the upstream Tufte (cream / et-book) stylesheet. */
+
+@font-face {
+  font-family: 'ABC Favorit';
+  src: url('favorit/ABCFavorit-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'ABC Favorit Mono';
+  src: url('favorit/ABCFavoritMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+html {
+  background: black;
+  color: white;
+  font-family: 'ABC Favorit', -apple-system, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  padding: 4rem 6rem;
+  max-width: 1200px;
+}
+
+article > h1 {
+  font-weight: 400;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 1rem;
+}
+
+article > p {
+  color: #CECECE;
+  max-width: 60ch;
+  margin: 0 0 2rem;
+}
+
+figure.fullwidth {
+  margin: 0;
+}
+
+figure.fullwidth svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+figcaption {
+  color: #5A5A5A;
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  max-width: 60ch;
+}

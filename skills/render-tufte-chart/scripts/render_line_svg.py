@@ -42,30 +42,36 @@ def render(data, title, series="", subtitle="", width=760, height=420):
 
     svg = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
-      f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="13">',
-      f'<rect width="{width}" height="{height}" fill="white"/>',
-      f'<text x="{ml}" y="28" font-size="17">{title}</text>',
+      f"font-family=\"'ABC Favorit', -apple-system, system-ui, sans-serif\" "
+      f'font-size="13" fill="white">',
+      '<style>'
+      ".label-axis { font-family: 'ABC Favorit Mono', ui-monospace, monospace; }"
+      ".label-cat  { font-family: 'ABC Favorit Mono', ui-monospace, monospace; "
+      "text-transform: uppercase; }"
+      '</style>',
+      f'<rect width="{width}" height="{height}" fill="black"/>',
+      f'<text x="{ml}" y="28" font-size="17" fill="white">{title}</text>',
     ]
     if subtitle:
-        svg.append(f'<text x="{ml}" y="46" font-size="12" fill="#666">{subtitle}</text>')
+        svg.append(f'<text x="{ml}" y="46" font-size="12" fill="#5A5A5A">{subtitle}</text>')
 
     # range-frame value (y) axis: line spans only data min..max, both ends labelled
     svg += [
       f'<line x1="{ml:.1f}" y1="{sy(ymin):.1f}" x2="{ml:.1f}" y2="{sy(ymax):.1f}" '
-      f'stroke="#333" stroke-width="1"/>',
-      f'<text x="{ml-8:.1f}" y="{sy(ymax)+4:.1f}" text-anchor="end">{fmt(ymax)}</text>',
-      f'<text x="{ml-8:.1f}" y="{sy(ymin)+4:.1f}" text-anchor="end">{fmt(ymin)}</text>',
+      f'stroke="#CECECE" stroke-width="1"/>',
+      f'<text x="{ml-8:.1f}" y="{sy(ymax)+4:.1f}" text-anchor="end" class="label-axis">{fmt(ymax)}</text>',
+      f'<text x="{ml-8:.1f}" y="{sy(ymin)+4:.1f}" text-anchor="end" class="label-axis">{fmt(ymin)}</text>',
       # x range frame: line spans data, ends labelled (the year span)
       f'<line x1="{sx(xmin):.1f}" y1="{height-mb:.1f}" x2="{sx(xmax):.1f}" '
-      f'y2="{height-mb:.1f}" stroke="#333" stroke-width="1"/>',
-      f'<text x="{sx(xmin):.1f}" y="{height-mb+18:.1f}" text-anchor="middle">{fmt(xmin)}</text>',
-      f'<text x="{sx(xmax):.1f}" y="{height-mb+18:.1f}" text-anchor="middle">{fmt(xmax)}</text>',
+      f'y2="{height-mb:.1f}" stroke="#CECECE" stroke-width="1"/>',
+      f'<text x="{sx(xmin):.1f}" y="{height-mb+18:.1f}" text-anchor="middle" class="label-axis">{fmt(xmin)}</text>',
+      f'<text x="{sx(xmax):.1f}" y="{height-mb+18:.1f}" text-anchor="middle" class="label-axis">{fmt(xmax)}</text>',
       # the data line: thin, dark, no markers, no grid
-      f'<polyline points="{poly}" fill="none" stroke="#222" stroke-width="1.4"/>',
+      f'<polyline points="{poly}" fill="none" stroke="white" stroke-width="1.4"/>',
     ]
     if series:
         svg.append(
-          f'<text x="{sx(end["x"])+6:.1f}" y="{sy(end["y"])+4:.1f}" fill="#222">{series}</text>')
+          f'<text x="{sx(end["x"])+6:.1f}" y="{sy(end["y"])+4:.1f}" fill="white">{series}</text>')
     svg.append("</svg>")
     return "\n".join(svg)
 

@@ -52,33 +52,39 @@ def render(groups, title, subtitle, width):
 
     parts = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
-      f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="13">',
-      f'<rect width="{width}" height="{height}" fill="white"/>',
-      f'<text x="{ml}" y="28" font-size="17">{title}</text>',
+      f"font-family=\"'ABC Favorit', -apple-system, system-ui, sans-serif\" "
+      f'font-size="13" fill="white">',
+      '<style>'
+      ".label-axis { font-family: 'ABC Favorit Mono', ui-monospace, monospace; }"
+      ".label-cat  { font-family: 'ABC Favorit Mono', ui-monospace, monospace; "
+      "text-transform: uppercase; }"
+      '</style>',
+      f'<rect width="{width}" height="{height}" fill="black"/>',
+      f'<text x="{ml}" y="28" font-size="17" fill="white">{title}</text>',
     ]
     if subtitle:
-        parts.append(f'<text x="{ml}" y="46" font-size="12" fill="#666">{subtitle}</text>')
+        parts.append(f'<text x="{ml}" y="46" font-size="12" fill="#5A5A5A">{subtitle}</text>')
 
     # range-frame y axis: line spans only data min..max, both ends labelled
     parts += [
       f'<line x1="{ml:.1f}" y1="{sy(ymin):.1f}" x2="{ml:.1f}" y2="{sy(ymax):.1f}" '
-      f'stroke="#333" stroke-width="1"/>',
-      f'<text x="{ml-8:.1f}" y="{sy(ymax)+4:.1f}" text-anchor="end" font-size="11" fill="#666">{ymax:g}</text>',
-      f'<text x="{ml-8:.1f}" y="{sy(ymin)+4:.1f}" text-anchor="end" font-size="11" fill="#666">{ymin:g}</text>',
+      f'stroke="#CECECE" stroke-width="1"/>',
+      f'<text x="{ml-8:.1f}" y="{sy(ymax)+4:.1f}" text-anchor="end" font-size="11" fill="#5A5A5A" class="label-axis">{ymax:g}</text>',
+      f'<text x="{ml-8:.1f}" y="{sy(ymin)+4:.1f}" text-anchor="end" font-size="11" fill="#5A5A5A" class="label-axis">{ymin:g}</text>',
     ]
     for i, (name, (lo, q1, med, q3, hi)) in enumerate(stats):
         cx = ml + band * (i + 0.5)
         # full-range straightedge
         parts.append(f'<line x1="{cx:.1f}" y1="{sy(lo):.1f}" x2="{cx:.1f}" y2="{sy(hi):.1f}" '
-                     f'stroke="#222" stroke-width="1"/>')
+                     f'stroke="white" stroke-width="1"/>')
         # IQR: offset half-line emphasising the middle half
         parts.append(f'<line x1="{cx+offset:.1f}" y1="{sy(q1):.1f}" x2="{cx+offset:.1f}" y2="{sy(q3):.1f}" '
-                     f'stroke="#222" stroke-width="2.2"/>')
+                     f'stroke="white" stroke-width="2.2"/>')
         # median tick
         parts.append(f'<line x1="{cx-4:.1f}" y1="{sy(med):.1f}" x2="{cx+4:.1f}" y2="{sy(med):.1f}" '
-                     f'stroke="#222" stroke-width="1.4"/>')
+                     f'stroke="white" stroke-width="1.4"/>')
         # group label
-        parts.append(f'<text x="{cx:.1f}" y="{height - mb + 18:.1f}" text-anchor="middle" font-size="12">{name}</text>')
+        parts.append(f'<text x="{cx:.1f}" y="{height - mb + 18:.1f}" text-anchor="middle" font-size="12" class="label-cat" fill="white">{name}</text>')
     parts.append("</svg>")
     return "\n".join(parts)
 

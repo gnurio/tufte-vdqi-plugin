@@ -249,3 +249,64 @@ Quick-reference card pulled from across the book.
 - **Aspect ratio**: graphics should generally be wider than tall — "move toward horizontal graphics about 50 percent wider than tall" (p.190). Golden Rectangle ≈ **1.618** (p.189).
 - **Redundant-ink budget**: in one worked redesign Tufte erased **~65%** of original ink with zero data loss (p.101). Most production charts have plenty to give back.
 - **Monetary time series**: deflate to real <base-year> units before plotting (B7). VDQI calls out Fiorina (p.66) for failing to do this.
+
+---
+
+## Part H — Brand overrides (this fork only)
+
+This fork of the toolkit applies the VDQI principles in Parts A–G with the
+following brand-specific overrides. Tier-1 principles (lie factor 0.95–1.05,
+dimensionality rule, zero baseline for bars, real-terms currency) are
+**never** overridden. The overrides below are Tier-2/3 aesthetic decisions.
+
+### H.1 Background and contrast inversion (overrides B5 default)
+Tufte's exemplars use a light background (cream, white). This fork uses a
+black canvas with white data marks. Justification: brand identity (dark UI
+context). The structural principle B5 (minimal ink, no decoration) is
+preserved — what changes is which pole of the contrast is "background" and
+which is "data." Axis lines move from near-black (#333) to light gray
+(#CECECE) to preserve hierarchy: data > axis > background.
+
+### H.2 Typography (overrides B5 default and B4 implementation)
+Tufte's exemplars use ET-Book serif throughout. This fork uses a two-typeface
+system:
+- **ABC Favorit (regular)** for narrative text: chart titles, subtitles,
+  series end-labels, footer captions.
+- **ABC Favorit Mono (always uppercase)** for structural labels: axis tick
+  values, category names, facet labels, group names.
+
+Justification: brand uses Favorit as its body face; the mono-uppercase
+treatment for structural labels is a brand convention that *strengthens* B4
+by distinguishing narrative labels from structural labels visually. The
+distinction reads as: "this label speaks to you" vs. "this label names a
+part of the chart." Tufte does not specifically endorse this distinction
+but it is consonant with B4's spirit (labels integrated with the data, not
+stranded in a key).
+
+### H.3 Accent color (overrides B5 color discipline)
+Tufte's exemplars use grayscale or muted color only as needed (the Hannibal
+map's "calm, transparent colors"). This fork uses a stronger saturated red
+(approximately #EB3D1E) for secondary series and emphasis, because muted
+brick reds (#B8341C) read as murky on the black background. The one-encoding-
+per-datum principle (B6) is preserved: the accent color is reserved for a
+single emphasized series; it is never used decoratively.
+
+### H.4 Not overridden
+The following Tufte commitments are unchanged in this fork:
+- **B1 honest proportions** — lie factor still 0.95–1.05, zero baselines on
+  bars, no dimensional encoding of 1-D data.
+- **B2 range-frame axes** — axis lines still trimmed to data range.
+- **B3 small multiples** — same construction rules.
+- **B4 direct labels** — still no legends; labels still placed on the data.
+- **B5 minimal ink (structural)** — no gridlines, no border box, no shadows,
+  no gradients, no 3-D. The background and palette are the *only* surface-
+  level changes.
+- **B6 one encoding per datum** — color is reserved for one accent series.
+- **B7 real-terms currency** — `deflate.py` still required for monetary
+  series across years.
+
+### H.5 What a brand request cannot do
+Per the constitution: a brand override may not request a lie factor outside
+0.95–1.05, a non-zero baseline on a bar chart, a dimensional encoding of a
+1-D quantity, or omission of currency deflation. These are Tier-1 and
+non-negotiable. If a brand demands them, this fork does not deliver them.

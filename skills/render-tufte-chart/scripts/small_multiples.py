@@ -64,39 +64,45 @@ def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
 
     parts = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {int(height)}" '
-      f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="12">',
-      f'<rect width="{width}" height="{int(height)}" fill="white"/>',
-      f'<text x="{pad_lr}" y="28" font-size="17">{title}</text>',
+      f"font-family=\"'ABC Favorit', -apple-system, system-ui, sans-serif\" "
+      f'font-size="12" fill="white">',
+      '<style>'
+      ".label-axis { font-family: 'ABC Favorit Mono', ui-monospace, monospace; }"
+      ".label-cat  { font-family: 'ABC Favorit Mono', ui-monospace, monospace; "
+      "text-transform: uppercase; }"
+      '</style>',
+      f'<rect width="{width}" height="{int(height)}" fill="black"/>',
+      f'<text x="{pad_lr}" y="28" font-size="17" fill="white">{title}</text>',
     ]
     if subtitle:
-        parts.append(f'<text x="{pad_lr}" y="46" font-size="12" fill="#666">{subtitle}</text>')
+        parts.append(f'<text x="{pad_lr}" y="46" font-size="12" fill="#5A5A5A">{subtitle}</text>')
 
     for i, name in enumerate(names):
         cx, cy = cell_origin(i)
         pts = facets[name]
         poly = " ".join(f"{sx(cx, x):.1f},{sy(cy, y):.1f}" for x, y in pts)
         parts += [
-          f'<text x="{cx + inset_l:.1f}" y="{cy + 14:.1f}" font-size="12" fill="#222">{name}</text>',
+          f'<text x="{cx + inset_l:.1f}" y="{cy + 14:.1f}" font-size="12" class="label-cat" fill="white">{name}</text>',
           # range-frame y axis (data min..max only)
           f'<line x1="{cx + inset_l:.1f}" y1="{sy(cy, ymin):.1f}" '
-          f'x2="{cx + inset_l:.1f}" y2="{sy(cy, ymax):.1f}" stroke="#444" stroke-width="0.8"/>',
+          f'x2="{cx + inset_l:.1f}" y2="{sy(cy, ymax):.1f}" stroke="#CECECE" stroke-width="0.8"/>',
           # range-frame x axis (data min..max only)
           f'<line x1="{sx(cx, xmin):.1f}" y1="{cy + cell_h - inset_b:.1f}" '
-          f'x2="{sx(cx, xmax):.1f}" y2="{cy + cell_h - inset_b:.1f}" stroke="#444" stroke-width="0.8"/>',
+          f'x2="{sx(cx, xmax):.1f}" y2="{cy + cell_h - inset_b:.1f}" stroke="#CECECE" stroke-width="0.8"/>',
           # one thin data line, no markers
-          f'<polyline points="{poly}" fill="none" stroke="#222" stroke-width="1.1"/>',
+          f'<polyline points="{poly}" fill="none" stroke="white" stroke-width="1.1"/>',
         ]
         # axis end labels — only on the first frame to avoid repeating
         if i == 0:
             parts += [
               f'<text x="{cx + inset_l - 4:.1f}" y="{sy(cy, ymax) + 3:.1f}" '
-              f'text-anchor="end" font-size="10" fill="#666">{fmt(ymax)}</text>',
+              f'text-anchor="end" font-size="10" fill="#5A5A5A" class="label-axis">{fmt(ymax)}</text>',
               f'<text x="{cx + inset_l - 4:.1f}" y="{sy(cy, ymin) + 3:.1f}" '
-              f'text-anchor="end" font-size="10" fill="#666">{fmt(ymin)}</text>',
+              f'text-anchor="end" font-size="10" fill="#5A5A5A" class="label-axis">{fmt(ymin)}</text>',
               f'<text x="{sx(cx, xmin):.1f}" y="{cy + cell_h - inset_b + 12:.1f}" '
-              f'text-anchor="middle" font-size="10" fill="#666">{fmt(xmin)}</text>',
+              f'text-anchor="middle" font-size="10" fill="#5A5A5A" class="label-axis">{fmt(xmin)}</text>',
               f'<text x="{sx(cx, xmax):.1f}" y="{cy + cell_h - inset_b + 12:.1f}" '
-              f'text-anchor="middle" font-size="10" fill="#666">{fmt(xmax)}</text>',
+              f'text-anchor="middle" font-size="10" fill="#5A5A5A" class="label-axis">{fmt(xmax)}</text>',
             ]
     parts.append("</svg>")
     return "\n".join(parts)
