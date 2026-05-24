@@ -1,7 +1,7 @@
 {
   "name": "tufte-vdqi",
-  "version": "2.0.0",
-  "description": "Edward Tufte's Visual Display of Quantitative Information — three executable skills (route, assess, render) backed by one principles reference. Scores graphics against Tufte's nine criteria, quantifies lie factor, and renders honest, minimal-ink charts.",
+  "version": "3.0.0",
+  "description": "Edward Tufte's Visual Display of Quantitative Information — three executable skills (route, assess, render) backed by a VDQI-sourced principles reference. Scores graphics against Tufte's nine criteria with named chartjunk species and a 13-entry catalogue of dissected failures, and renders per-genre charts (time-series, small multiples, quartile plot, range-frame scatter) plus a tufte-css HTML wrapper.",
   "keywords": [
     "data-visualization",
     "tufte",

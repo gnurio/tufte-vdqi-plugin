@@ -33,10 +33,29 @@ never needs cleanup afterwards. Read that file for the full reasoning.
   real terms first (use `assess-graphical-excellence/scripts/deflate.py` with
   retrieved CPI) and label the axis "real <base-year> <currency>".
 
+## Pick the genre first
+
+Before writing any code, check `references/tufte-principles.md` Part C and
+choose Tufte's genre that fits the data shape. The toolkit ships a working
+script for the four genres below; for the rest, build the SVG by hand
+following Part C's recipe.
+
+| Data shape | Tufte genre (Part C) | Script |
+|---|---|---|
+| 1 × N over time | C10 time-series | `render_line_svg.py` |
+| K series indexed by a category | C5 small multiples | `small_multiples.py` |
+| Distributions of K groups | C1 quartile plot | `quartile_plot.py` |
+| Bivariate / scatter | C2 range frame (+ optional C3 dot-dash marginals) | `range_frame.py` |
+| Categorical 1-value | C9 white-grid bar / C6 supertable | hand-build SVG |
+| ≤20 numbers total | C6 supertable | hand-build HTML/SVG |
+| Many variables, geographic | F (Minard / Snow / Cancer Atlas) | hand-build SVG |
+
+If the data is ≤20 numbers, **prefer a table** (VDQI p.56) — say so to the user
+before rendering. If forced to graph, use C6 supertable, not pie/bar.
+
 ## How to render
 
-**Line / time-series:** use the working script — it implements range frames,
-direct end-labels, and no gridlines:
+### Line / time-series (C10)
 
 ```
 python scripts/render_line_svg.py \
@@ -47,11 +66,52 @@ python scripts/render_line_svg.py \
 (Pass `--data-file path.json` for larger data. For monetary series, deflate the
 values before passing them in.)
 
-**Bar, scatter, small multiples, or richer styling:** write the SVG/HTML
-directly, following the build checklist above. Keep it a single self-contained
-file. A minimal pattern: white canvas, thin dark data marks, range-frame axis
-lines with end labels, category/series text placed on the marks, no grid/box.
-For small multiples, lay out a grid of identical mini-charts sharing one scale.
+### Small multiples (C5) — "inevitably comparative, deftly multivariate"
+
+Input is a flat list of records keyed by facet, x, and y:
+
+```
+python scripts/small_multiples.py \
+  --data '[{"facet":"NA","x":1,"y":1000},{"facet":"EU","x":1,"y":900}, ...]' \
+  --facet-key facet --x-key x --y-key y \
+  --title "Daily active users by region" --cols 3 --out chart.svg
+```
+
+Frames are sorted by total y (descending) unless `--order "A,B,C"` is passed.
+All frames share scales; axis end-labels appear only on the first frame to
+avoid repeating ink.
+
+### Quartile plot (C1) — Tufte's stripped-down box plot
+
+Input is a JSON object mapping group name to list of values:
+
+```
+python scripts/quartile_plot.py \
+  --data '{"Control":[2.3,2.5,...],"TreatmentA":[1.8,2.0,...]}' \
+  --title "Reaction time (s) by condition" --out chart.svg
+```
+
+The box is erased; what remains is a single vertical stroke per group spanning
+the full range, the IQR offset horizontally from it, and a median tick.
+
+### Range-frame scatter (C2) — and optional dot-dash plot (C3)
+
+```
+python scripts/range_frame.py \
+  --data '[{"x":1.2,"y":3.4},{"x":2.1,"y":4.5},...]' \
+  --title "Body mass vs. wing span" \
+  [--marginal-dash] --out chart.svg
+```
+
+`--marginal-dash` adds Tufte's dot-dash plot (VDQI p.133): marginal frequency
+dashes along each axis framing the bivariate distribution.
+
+### Other genres (bar, supertable, multivariate map, etc.)
+
+Write the SVG/HTML directly, following Part C's recipe and the build checklist
+above. Keep it a single self-contained file. A minimal pattern: white canvas,
+thin dark data marks, range-frame axis lines with end labels, category/series
+text placed on the marks, no grid/box.
 
 ## Optional: Tufte-styled HTML page
 

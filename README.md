@@ -57,18 +57,21 @@ Same data, both times. No decorative bars, no arbitrary colors. Cleveland dot pl
 
 ## Skills
 
-Three skills, one shared reference. The router picks between the two action skills; the principles file is the canonical encoding of every Tufte technique (lie factor, range frames, small multiples, integrated labels, non-data-ink, redundant ink, monetary deflation) and is read by both actions.
+Three skills, one VDQI-sourced reference. The router picks between the two action skills; the principles file (mirrored into both skills) is the source-grounded encoding of Tufte's specific techniques — nine criteria with numeric anchors, ten chart genres with construction recipes, a chartjunk taxonomy, and 13+14 named anti-pattern/exemplar catalogues — all cited to VDQI by page.
 
 | Skill | What it does |
 |-------|-------------|
 | `orchestrate-tufte-vdqi` | Routes a request to assess, render, or both. Use it when you're unsure where to start. |
-| `assess-graphical-excellence` | Scores a graphic against Tufte's nine criteria, computes the lie factor, and returns prioritised fixes tagged with the remedy (B1–B7) needed to apply them. |
-| `render-tufte-chart` | Produces an actual SVG using range-frame axes, direct end labels, no gridlines, and honest proportions. Ships a working `render_line_svg.py` for line charts and a build checklist for bars / scatters / small multiples. |
+| `assess-graphical-excellence` | Scores a graphic against Tufte's nine criteria with VDQI numeric anchors, names the chartjunk species present (moiré, dreaded grid, duck, decoration), computes lie factor and compares to VDQI's catalogue (14.8 NYT MPG, 59.4 TIME barrel "a record", etc.), checks whether the data wants a different genre (table for ≤20 numbers, small multiples for many series, range frame instead of bordered scatter), and emits fixes tagged with remedy / genre / anti-pattern resemblance / exemplar to emulate. |
+| `render-tufte-chart` | Produces an actual SVG using Tufte's specific genres. Ships per-genre scripts for time-series, small multiples, the quartile plot (Tufte's stripped-down box plot), and range-frame scatter (with optional dot-dash marginals), plus an HTML wrapper using the bundled tufte-css. |
 
 Ships with helper scripts and the [tufte-css](https://github.com/edwardtufte/tufte-css) typography bundle (MIT, vendored under `skills/render-tufte-chart/assets/tufte-css/`):
 
 - `assess-graphical-excellence/scripts/deflate.py` — inflation adjustment for monetary time series. Requires real CPI values; errors on a missing year rather than guessing.
-- `render-tufte-chart/scripts/render_line_svg.py` — Tufte-style SVG line chart with range-frame axes and direct end labels.
+- `render-tufte-chart/scripts/render_line_svg.py` — Tufte-style time-series line chart (VDQI C10).
+- `render-tufte-chart/scripts/small_multiples.py` — grid of identical mini-charts sharing one scale (VDQI C5).
+- `render-tufte-chart/scripts/quartile_plot.py` — Tufte's stripped-down box plot (VDQI C1, pp.124–125).
+- `render-tufte-chart/scripts/range_frame.py` — scatterplot with axis lines spanning only the data range (VDQI C2, pp.130–132); pass `--marginal-dash` for the dot-dash plot (C3, p.133).
 - `render-tufte-chart/scripts/wrap_html.py` — wraps any SVG in a Tufte-styled HTML page using the vendored ET Book typography; copies the stylesheet and fonts next to the output so it opens in any browser with no network.
 
 ---
@@ -120,6 +123,24 @@ render-tufte-chart            → plot the real-terms series with a labelled axi
 render-tufte-chart            → produces chart.svg
 wrap_html.py                  → wraps it in a tufte-css page (ET Book typography)
                                 → outputs chart.html + ./tufte-assets/ siblings
+```
+
+### "I have many series to compare"
+```
+small_multiples.py            → grid of identical mini-charts, shared scales
+                                ("inevitably comparative, deftly multivariate" — VDQI p.170)
+```
+
+### "I want to compare distributions across groups"
+```
+quartile_plot.py              → Tufte's stripped-down box plot (VDQI pp.124–125)
+                                erased box; offset IQR; median tick
+```
+
+### "I want a scatter that doesn't lie about the data range"
+```
+range_frame.py                → axis lines span only data min..max (VDQI pp.130–132)
+range_frame.py --marginal-dash → adds dot-dash marginals (VDQI p.133)
 ```
 
 ---
