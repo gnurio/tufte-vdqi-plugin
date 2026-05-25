@@ -18,6 +18,8 @@ Usage:
 """
 import argparse, json, sys
 
+from _svg_text import TRUSTED_MARKER, svg_text
+
 
 def render(data, title, series="", subtitle="", width=760, height=420):
     pts = sorted(data, key=lambda d: d["x"])
@@ -43,11 +45,12 @@ def render(data, title, series="", subtitle="", width=760, height=420):
     svg = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
       f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="13">',
+      TRUSTED_MARKER,
       f'<rect width="{width}" height="{height}" fill="white"/>',
-      f'<text x="{ml}" y="28" font-size="17">{title}</text>',
+      f'<text x="{ml}" y="28" font-size="17">{svg_text(title)}</text>',
     ]
     if subtitle:
-        svg.append(f'<text x="{ml}" y="46" font-size="12" fill="#666">{subtitle}</text>')
+        svg.append(f'<text x="{ml}" y="46" font-size="12" fill="#666">{svg_text(subtitle)}</text>')
 
     # range-frame value (y) axis: line spans only data min..max, both ends labelled
     svg += [
@@ -65,7 +68,7 @@ def render(data, title, series="", subtitle="", width=760, height=420):
     ]
     if series:
         svg.append(
-          f'<text x="{sx(end["x"])+6:.1f}" y="{sy(end["y"])+4:.1f}" fill="#222">{series}</text>')
+          f'<text x="{sx(end["x"])+6:.1f}" y="{sy(end["y"])+4:.1f}" fill="#222">{svg_text(series)}</text>')
     svg.append("</svg>")
     return "\n".join(svg)
 

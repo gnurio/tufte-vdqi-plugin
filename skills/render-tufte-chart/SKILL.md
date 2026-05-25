@@ -32,6 +32,11 @@ never needs cleanup afterwards. Read that file for the full reasoning.
 - **Money over time (B7).** If the series is currency across years, convert to
   real terms first (use `assess-graphical-excellence/scripts/deflate.py` with
   retrieved CPI) and label the axis "real <base-year> <currency>".
+- **Inert SVG (B8).** No `<script>`, no event-handler attributes (`onload=`
+  etc.), no `javascript:` URLs, no `<foreignObject>`, no SMIL `<animate>`/
+  `<set>`. The four scripts above never emit these; if you hand-build SVG for
+  one of the "other genres" below, keep it inert too — `wrap_html.py` will
+  refuse to wrap anything carrying active content.
 
 ## Pick the genre first
 
@@ -154,6 +159,15 @@ slide deck, another site). Use the HTML wrapper when you want a self-contained,
 browser-ready Tufte page (sharing a link, hosting a report). Pass `--no-assets`
 if the page will be served from a site that already publishes `tufte.css` at
 the expected path.
+
+**If wrap_html refuses your SVG.** The wrapper accepts SVGs produced by the
+four scripts above (they carry a trusted marker). If it exits with
+`ERROR[untrusted-svg]`, the SVG wasn't produced by one of those — re-render
+the chart with the matching script and try again. If you genuinely need to
+wrap a hand-built or third-party SVG, pass `--untrusted`; the wrapper will
+then run a best-effort active-content check and exit with `ERROR[active-svg]`
+if it finds anything script-bearing. Either way, the fix is to produce inert
+SVG (see B8 above).
 
 Always save the file and tell the user its path. Where useful, follow up with
 `assess-graphical-excellence` to confirm the result scores well.

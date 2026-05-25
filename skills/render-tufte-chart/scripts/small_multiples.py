@@ -20,6 +20,8 @@ Usage:
 import argparse, json, math, sys
 from pathlib import Path
 
+from _svg_text import TRUSTED_MARKER, svg_text
+
 
 def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
     facets = {}
@@ -65,18 +67,19 @@ def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
     parts = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {int(height)}" '
       f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="12">',
+      TRUSTED_MARKER,
       f'<rect width="{width}" height="{int(height)}" fill="white"/>',
-      f'<text x="{pad_lr}" y="28" font-size="17">{title}</text>',
+      f'<text x="{pad_lr}" y="28" font-size="17">{svg_text(title)}</text>',
     ]
     if subtitle:
-        parts.append(f'<text x="{pad_lr}" y="46" font-size="12" fill="#666">{subtitle}</text>')
+        parts.append(f'<text x="{pad_lr}" y="46" font-size="12" fill="#666">{svg_text(subtitle)}</text>')
 
     for i, name in enumerate(names):
         cx, cy = cell_origin(i)
         pts = facets[name]
         poly = " ".join(f"{sx(cx, x):.1f},{sy(cy, y):.1f}" for x, y in pts)
         parts += [
-          f'<text x="{cx + inset_l:.1f}" y="{cy + 14:.1f}" font-size="12" fill="#222">{name}</text>',
+          f'<text x="{cx + inset_l:.1f}" y="{cy + 14:.1f}" font-size="12" fill="#222">{svg_text(name)}</text>',
           # range-frame y axis (data min..max only)
           f'<line x1="{cx + inset_l:.1f}" y1="{sy(cy, ymin):.1f}" '
           f'x2="{cx + inset_l:.1f}" y2="{sy(cy, ymax):.1f}" stroke="#444" stroke-width="0.8"/>',

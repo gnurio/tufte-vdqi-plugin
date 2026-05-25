@@ -1,3 +1,5 @@
 .DS_Store
 **/.DS_Store
 CHANGES.md
+__pycache__/
+*.pyc

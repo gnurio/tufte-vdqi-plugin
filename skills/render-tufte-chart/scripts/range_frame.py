@@ -17,6 +17,8 @@ Usage:
 import argparse, json, sys
 from pathlib import Path
 
+from _svg_text import TRUSTED_MARKER, svg_text
+
 
 def render(data, title, subtitle, marginal_dash, width, height):
     pts = [(d["x"], d["y"]) for d in data]
@@ -38,11 +40,12 @@ def render(data, title, subtitle, marginal_dash, width, height):
     parts = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
       f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="13">',
+      TRUSTED_MARKER,
       f'<rect width="{width}" height="{height}" fill="white"/>',
-      f'<text x="{ml}" y="28" font-size="17">{title}</text>',
+      f'<text x="{ml}" y="28" font-size="17">{svg_text(title)}</text>',
     ]
     if subtitle:
-        parts.append(f'<text x="{ml}" y="46" font-size="12" fill="#666">{subtitle}</text>')
+        parts.append(f'<text x="{ml}" y="46" font-size="12" fill="#666">{svg_text(subtitle)}</text>')
 
     # range-frame axes — span only the data range
     parts += [

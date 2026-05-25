@@ -17,6 +17,8 @@ Usage:
 import argparse, json, sys
 from pathlib import Path
 
+from _svg_text import TRUSTED_MARKER, svg_text
+
 
 def quartiles(xs):
     xs = sorted(xs)
@@ -53,11 +55,12 @@ def render(groups, title, subtitle, width):
     parts = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
       f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="13">',
+      TRUSTED_MARKER,
       f'<rect width="{width}" height="{height}" fill="white"/>',
-      f'<text x="{ml}" y="28" font-size="17">{title}</text>',
+      f'<text x="{ml}" y="28" font-size="17">{svg_text(title)}</text>',
     ]
     if subtitle:
-        parts.append(f'<text x="{ml}" y="46" font-size="12" fill="#666">{subtitle}</text>')
+        parts.append(f'<text x="{ml}" y="46" font-size="12" fill="#666">{svg_text(subtitle)}</text>')
 
     # range-frame y axis: line spans only data min..max, both ends labelled
     parts += [
@@ -78,7 +81,7 @@ def render(groups, title, subtitle, width):
         parts.append(f'<line x1="{cx-4:.1f}" y1="{sy(med):.1f}" x2="{cx+4:.1f}" y2="{sy(med):.1f}" '
                      f'stroke="#222" stroke-width="1.4"/>')
         # group label
-        parts.append(f'<text x="{cx:.1f}" y="{height - mb + 18:.1f}" text-anchor="middle" font-size="12">{name}</text>')
+        parts.append(f'<text x="{cx:.1f}" y="{height - mb + 18:.1f}" text-anchor="middle" font-size="12">{svg_text(name)}</text>')
     parts.append("</svg>")
     return "\n".join(parts)
 
