@@ -160,14 +160,12 @@ browser-ready Tufte page (sharing a link, hosting a report). Pass `--no-assets`
 if the page will be served from a site that already publishes `tufte.css` at
 the expected path.
 
-**If wrap_html refuses your SVG.** The wrapper accepts SVGs produced by the
-four scripts above (they carry a trusted marker). If it exits with
-`ERROR[untrusted-svg]`, the SVG wasn't produced by one of those — re-render
-the chart with the matching script and try again. If you genuinely need to
-wrap a hand-built or third-party SVG, pass `--untrusted`; the wrapper will
-then run a best-effort active-content check and exit with `ERROR[active-svg]`
-if it finds anything script-bearing. Either way, the fix is to produce inert
-SVG (see B8 above).
+**If wrap_html refuses your SVG.** File-loaded SVGs are treated as untrusted
+text and checked for active content before inlining, even if they contain a
+trusted-looking marker comment. If it exits with `ERROR[active-svg]`, the SVG
+contains script-bearing constructs. Re-render the chart with one of the trusted
+renderer scripts above or remove the active content. Either way, the fix is to
+produce inert SVG (see B8 above).
 
 Always save the file and tell the user its path. Where useful, follow up with
 `assess-graphical-excellence` to confirm the result scores well.

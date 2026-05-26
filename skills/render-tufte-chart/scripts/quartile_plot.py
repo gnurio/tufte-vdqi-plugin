@@ -17,7 +17,7 @@ Usage:
 import argparse, json, sys
 from pathlib import Path
 
-from _svg_text import TRUSTED_MARKER, svg_text
+from _svg_text import TRUSTED_MARKER, svg_text, trusted_svg
 
 
 def quartiles(xs):
@@ -83,7 +83,7 @@ def render(groups, title, subtitle, width):
         # group label
         parts.append(f'<text x="{cx:.1f}" y="{height - mb + 18:.1f}" text-anchor="middle" font-size="12">{svg_text(name)}</text>')
     parts.append("</svg>")
-    return "\n".join(parts)
+    return trusted_svg("\n".join(parts))
 
 
 def main() -> None:

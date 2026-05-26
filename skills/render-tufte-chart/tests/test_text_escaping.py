@@ -15,7 +15,9 @@ or directly:
     python skills/render-tufte-chart/tests/test_text_escaping.py
 """
 import importlib.util
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -122,8 +124,8 @@ class RangeFrameTests(unittest.TestCase):
 
 
 class RendererProvenanceTests(unittest.TestCase):
-    """Every trusted renderer must stamp the tufte-vdqi marker so wrap_html
-    can distinguish its own output from arbitrary third-party SVG."""
+    """Renderer output keeps a visible marker, but trust comes from its
+    in-memory TrustedSVG type rather than forgeable file contents."""
 
     def test_line_svg_emits_marker(self):
         svg = render_line_svg.render(
@@ -277,10 +279,33 @@ class BuildHtmlGuardTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "script"):
             wrap_html.build_html("t", "", svg, "c", "x.css")
 
-    def test_build_html_accepts_trusted_svg(self):
+    def test_build_html_rejects_forged_trusted_marker_with_script(self):
         svg = (f'<svg xmlns="http://www.w3.org/2000/svg">{TRUSTED_MARKER}'
-               '<rect width="10" height="10" fill="white"/></svg>')
+               '<script>alert(1)</script></svg>')
+        with self.assertRaisesRegex(ValueError, "script"):
+            wrap_html.build_html("t", "", svg, "c", "x.css")
+
+    def test_build_html_accepts_trusted_svg(self):
+        svg = render_line_svg.render(
+            [{"x": 1, "y": 2}, {"x": 2, "y": 3}], title="t")
+        self.assertTrue(wrap_html.is_trusted(svg))
         html = wrap_html.build_html("t", "", svg, "c", "x.css")
+        self.assertIn("<rect", html)
+
+    def test_build_html_uses_typed_provenance_fast_path(self):
+        svg = render_line_svg.render(
+            [{"x": 1, "y": 2}, {"x": 2, "y": 3}], title="t")
+        original_reject = wrap_html.reject_active_svg
+
+        def fail_if_called(_svg):
+            raise AssertionError("trusted renderer output should use fast path")
+
+        try:
+            wrap_html.reject_active_svg = fail_if_called
+            html = wrap_html.build_html("t", "", svg, "c", "x.css")
+        finally:
+            wrap_html.reject_active_svg = original_reject
+
         self.assertIn("<rect", html)
 
     def test_build_html_accepts_untrusted_benign_svg(self):
@@ -292,11 +317,46 @@ class BuildHtmlGuardTests(unittest.TestCase):
 
 
 class TrustMarkerTests(unittest.TestCase):
-    def test_is_trusted_detects_marker(self):
-        self.assertTrue(wrap_html.is_trusted(f"<svg>{TRUSTED_MARKER}</svg>"))
+    def test_is_trusted_detects_renderer_output_type(self):
+        svg = render_line_svg.render(
+            [{"x": 1, "y": 2}, {"x": 2, "y": 3}], title="t")
+        self.assertTrue(wrap_html.is_trusted(svg))
 
-    def test_is_trusted_rejects_missing_marker(self):
-        self.assertFalse(wrap_html.is_trusted("<svg></svg>"))
+    def test_is_trusted_rejects_file_level_marker(self):
+        self.assertFalse(wrap_html.is_trusted(f"<svg>{TRUSTED_MARKER}</svg>"))
+
+
+class WrapHtmlCliTests(unittest.TestCase):
+    def test_cli_rejects_forged_trusted_marker_with_script(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            svg_path = tmp_path / "forged.svg"
+            out_path = tmp_path / "out.html"
+            svg_path.write_text(
+                f'<svg xmlns="http://www.w3.org/2000/svg">{TRUSTED_MARKER}'
+                '<script>alert(1)</script></svg>')
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPTS_DIR / "wrap_html.py"),
+                    "--svg",
+                    str(svg_path),
+                    "--out",
+                    str(out_path),
+                    "--title",
+                    "test",
+                    "--no-assets",
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn("ERROR[active-svg]", result.stderr)
+            self.assertFalse(out_path.exists())
 
 
 if __name__ == "__main__":

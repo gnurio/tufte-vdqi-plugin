@@ -18,7 +18,7 @@ Usage:
 """
 import argparse, json, sys
 
-from _svg_text import TRUSTED_MARKER, svg_text
+from _svg_text import TRUSTED_MARKER, svg_text, trusted_svg
 
 
 def render(data, title, series="", subtitle="", width=760, height=420):
@@ -70,7 +70,7 @@ def render(data, title, series="", subtitle="", width=760, height=420):
         svg.append(
           f'<text x="{sx(end["x"])+6:.1f}" y="{sy(end["y"])+4:.1f}" fill="#222">{svg_text(series)}</text>')
     svg.append("</svg>")
-    return "\n".join(svg)
+    return trusted_svg("\n".join(svg))
 
 
 def main():

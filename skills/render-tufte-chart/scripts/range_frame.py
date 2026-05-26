@@ -17,7 +17,7 @@ Usage:
 import argparse, json, sys
 from pathlib import Path
 
-from _svg_text import TRUSTED_MARKER, svg_text
+from _svg_text import TRUSTED_MARKER, svg_text, trusted_svg
 
 
 def render(data, title, subtitle, marginal_dash, width, height):
@@ -81,7 +81,7 @@ def render(data, title, subtitle, marginal_dash, width, height):
                          f'stroke="#666" stroke-width="0.8"/>')
 
     parts.append("</svg>")
-    return "\n".join(parts)
+    return trusted_svg("\n".join(parts))
 
 
 def main() -> None:

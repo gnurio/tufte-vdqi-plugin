@@ -10,10 +10,9 @@ the vendored tufte.css next to it. Copies tufte.css + the et-book/ fonts into
 a sibling `tufte-assets/` directory the first time so the page renders
 correctly when opened locally with no network.
 
-Trust model: the SVG must carry the tufte-vdqi trusted marker that the four
-local renderers (render_line_svg.py, small_multiples.py, quartile_plot.py,
-range_frame.py) emit. To wrap a third-party or hand-written SVG, pass
-`--untrusted` to opt into a best-effort active-content rejector.
+Trust model: SVG read from files is treated as untrusted text and is checked
+before inlining. In-process renderer output can use the internal TrustedSVG
+type as a provenance fast path that third-party files cannot forge.
 
 Usage:
   python wrap_html.py \
@@ -24,22 +23,21 @@ Usage:
 
 Add `--no-assets` to skip the asset copy (use when the page is being served
 from a site that already publishes tufte.css at the expected path).
-Add `--untrusted` to wrap an SVG that wasn't produced by the trusted local
-renderers; the active-content rejector will run as a best-effort check.
+`--untrusted` is retained for compatibility; file inputs are checked either way.
 """
-import argparse, os, re, shutil, sys
+import argparse, re, shutil, sys
 from html import escape
 from pathlib import Path
 
-from _svg_text import TRUSTED_MARKER
+from _svg_text import TrustedSVG
 
 # Patterns for SVG features that execute script or load external content.
 # wrap_html.py emits an HTML page that browsers will parse, so any of these
 # in an inlined SVG would run in the page's origin. Regex sanitisation is
 # fundamentally leaky (entity-encoded `javascript:`, namespaced tags, etc.),
-# so this rejector is a best-effort fallback for SVGs that opt out of the
-# trusted-marker provenance check. The trusted local renderers are the
-# guarantee — anything else is risk the caller accepted via --untrusted.
+# so this rejector is a best-effort fallback for SVG text loaded from files.
+# In-process renderer output can bypass it only by passing the internal
+# TrustedSVG type, which cannot be forged by placing a string in an SVG file.
 _NS_PREFIX = r"(?:[A-Za-z][\w.-]*:)?"
 _ACTIVE_SVG_PATTERNS = [
     (re.compile(rf"<\s*{_NS_PREFIX}script\b", re.IGNORECASE),
@@ -64,8 +62,8 @@ _ACTIVE_SVG_PATTERNS = [
 
 
 def is_trusted(svg: str) -> bool:
-    """True if the SVG carries the tufte-vdqi trusted-renderer marker."""
-    return TRUSTED_MARKER in svg
+    """True for in-memory SVG produced by this package's renderer functions."""
+    return isinstance(svg, TrustedSVG)
 
 
 def reject_active_svg(svg: str) -> None:
@@ -115,9 +113,9 @@ def strip_xml_decl(svg: str) -> str:
 
 
 def build_html(title: str, intro: str, svg: str, caption: str, css_href: str) -> str:
-    # Defense-in-depth: any caller wrapping an untrusted SVG (no provenance
-    # marker) goes through the active-content rejector. Trusted SVGs from
-    # the four local renderers skip it.
+    # Defense-in-depth: any file-loaded or third-party SVG text goes through
+    # the active-content rejector. Only in-memory TrustedSVG renderer output
+    # can use the provenance fast path.
     if not is_trusted(svg):
         reject_active_svg(svg)
     intro_html = f'<p>{escape(intro)}</p>' if intro else ""
@@ -159,23 +157,13 @@ def main() -> None:
     p.add_argument("--no-assets", action="store_true",
                    help="skip copying tufte.css and et-book/ next to the output")
     p.add_argument("--untrusted", action="store_true",
-                   help="permit wrapping an SVG not produced by the trusted local renderers; "
-                        "runs a best-effort active-content rejector before inlining")
+                   help="compatibility flag; SVG file inputs are checked before inlining")
     a = p.parse_args()
 
     try:
         svg_text_content = Path(a.svg).read_text()
     except OSError as e:
         print(f"ERROR[svg-read]: cannot read SVG {a.svg}: {e}", file=sys.stderr)
-        sys.exit(1)
-
-    if not is_trusted(svg_text_content) and not a.untrusted:
-        print(
-            f"ERROR[untrusted-svg]: {a.svg} was not produced by the trusted local renderers "
-            "(no tufte-vdqi marker). Re-render with render_line_svg.py / small_multiples.py / "
-            "quartile_plot.py / range_frame.py, or pass --untrusted to opt into a best-effort "
-            "active-content check.",
-            file=sys.stderr)
         sys.exit(1)
 
     out_html = Path(a.out)

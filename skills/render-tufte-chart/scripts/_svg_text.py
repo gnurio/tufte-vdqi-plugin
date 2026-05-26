@@ -1,12 +1,21 @@
 """Shared helpers for the render-* scripts.
 
 Centralises the escaping policy applied to user/data-controlled text that
-flows into SVG <text> nodes, and the provenance marker the renderers emit so
-wrap_html.py can tell trusted output from arbitrary third-party SVG.
+flows into SVG <text> nodes, and the in-memory provenance type the renderers
+return so wrap_html.py can distinguish renderer output from file-loaded SVG.
 """
 from html import escape
 
 TRUSTED_MARKER = "<!-- tufte-vdqi: trusted -->"
+
+
+class TrustedSVG(str):
+    """In-memory SVG produced by this package's renderer functions."""
+
+
+def trusted_svg(svg: str) -> TrustedSVG:
+    """Mark renderer-produced SVG as trusted without relying on file contents."""
+    return TrustedSVG(svg)
 
 
 def svg_text(value: object) -> str:

@@ -20,7 +20,7 @@ Usage:
 import argparse, json, math, sys
 from pathlib import Path
 
-from _svg_text import TRUSTED_MARKER, svg_text
+from _svg_text import TRUSTED_MARKER, svg_text, trusted_svg
 
 
 def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
@@ -102,7 +102,7 @@ def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
               f'text-anchor="middle" font-size="10" fill="#666">{fmt(xmax)}</text>',
             ]
     parts.append("</svg>")
-    return "\n".join(parts)
+    return trusted_svg("\n".join(parts))
 
 
 def main() -> None:
