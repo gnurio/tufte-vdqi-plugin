@@ -37,7 +37,9 @@ Same data, both times. No decorative bars, no arbitrary colors. Cleveland dot pl
 
 ## Install
 
-**Individual (Claude Code)**
+### Claude Code
+
+**Individual**
 
 1. Open Claude Desktop → switch to the Cowork tab
 2. Go to **Plugins**
@@ -52,6 +54,30 @@ Same data, both times. No decorative bars, no arbitrary colors. Cleveland dot pl
 4. Set market preference: Required / Available / Default
 
 *Requires a paid Claude plan (Pro, Max, Team, or Enterprise) with Cowork enabled.*
+
+### Codex
+
+This repository also ships Codex plugin metadata:
+
+- `.agents/plugins/marketplace.json` as the repo-local marketplace
+- `plugins/tufte-vdqi/.codex-plugin/plugin.json` as the Codex plugin manifest
+- `plugins/tufte-vdqi/skills/` as the Codex plugin skill payload
+
+Install from a local checkout:
+
+```
+codex plugin marketplace add /path/to/tufte-vdqi-plugin
+codex plugin add tufte-vdqi@tufte-vdqi-local
+```
+
+For a separate Codex profile, set `CODEX_HOME` for both commands:
+
+```
+CODEX_HOME=/path/to/codex-home codex plugin marketplace add /path/to/tufte-vdqi-plugin
+CODEX_HOME=/path/to/codex-home codex plugin add tufte-vdqi@tufte-vdqi-local
+```
+
+Start a new Codex thread after installation so the plugin skills are loaded.
 
 ---
 

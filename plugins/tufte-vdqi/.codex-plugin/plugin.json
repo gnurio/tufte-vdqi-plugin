@@ -1,0 +1,42 @@
+{
+  "name": "tufte-vdqi",
+  "version": "3.0.0",
+  "description": "Edward Tufte's Visual Display of Quantitative Information skills for assessing and rendering data graphics.",
+  "author": {
+    "name": "George Nurijanian",
+    "url": "https://github.com/gnurio"
+  },
+  "homepage": "https://github.com/gnurio/tufte-vdqi-plugin",
+  "repository": "https://github.com/gnurio/tufte-vdqi-plugin",
+  "keywords": [
+    "data-visualization",
+    "tufte",
+    "graphics",
+    "design",
+    "data-ink-ratio",
+    "visual-display",
+    "lie-factor",
+    "chartjunk",
+    "small-multiples",
+    "graphical-excellence"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Tufte VDQI",
+    "shortDescription": "Assess and render Tufte-style data graphics.",
+    "longDescription": "Three VDQI-grounded skills route visualization requests, assess graphical excellence, and render Tufte-style SVG or HTML charts using local helper scripts.",
+    "developerName": "George Nurijanian",
+    "category": "Data Visualization",
+    "capabilities": [
+      "Data Visualization",
+      "Local Scripts"
+    ],
+    "websiteURL": "https://github.com/gnurio/tufte-vdqi-plugin",
+    "defaultPrompt": [
+      "Assess this chart for graphical excellence.",
+      "Render this data as a Tufte-style chart.",
+      "Declutter this visualization."
+    ],
+    "brandColor": "#2F5D50"
+  }
+}

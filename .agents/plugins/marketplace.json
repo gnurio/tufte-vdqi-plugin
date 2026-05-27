@@ -1,0 +1,20 @@
+{
+  "name": "tufte-vdqi-local",
+  "interface": {
+    "displayName": "Tufte VDQI Local"
+  },
+  "plugins": [
+    {
+      "name": "tufte-vdqi",
+      "source": {
+        "source": "local",
+        "path": "./plugins/tufte-vdqi"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Data Visualization"
+    }
+  ]
+}
