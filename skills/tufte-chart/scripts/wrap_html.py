@@ -26,7 +26,7 @@ Add `--no-assets` to skip the asset copy (use when the page is being served
 from a site that already publishes tufte.css at the expected path).
 """
 import argparse, re, shutil, sys
-from html import escape
+from html import escape, unescape
 from pathlib import Path
 
 # Patterns for SVG features that execute script or load external content.
@@ -37,6 +37,8 @@ from pathlib import Path
 # if this ever routinely wraps hostile third-party SVG.
 _NS_PREFIX = r"(?:[A-Za-z][\w.-]*:)?"
 _ACTIVE_SVG_PATTERNS = [
+    (re.compile(r"<!DOCTYPE", re.IGNORECASE),
+     "<!DOCTYPE declaration (possible XXE/entity injection)"),
     (re.compile(rf"<\s*{_NS_PREFIX}script\b", re.IGNORECASE),
      "<script> element"),
     (re.compile(rf"<\s*{_NS_PREFIX}foreignObject\b", re.IGNORECASE),
@@ -59,14 +61,21 @@ _ACTIVE_SVG_PATTERNS = [
 
 
 def reject_active_svg(svg: str) -> None:
-    """Raise ValueError if the SVG contains script-bearing constructs."""
-    for pattern, label in _ACTIVE_SVG_PATTERNS:
-        if pattern.search(svg):
-            raise ValueError(
-                f"SVG contains {label}; refusing to wrap. "
-                "Produce inert SVG — the local renderers (render_line_svg.py, "
-                "small_multiples.py, quartile_plot.py, range_frame.py) always do."
-            )
+    """Raise ValueError if the SVG contains script-bearing constructs.
+
+    Checks both the raw text and its HTML-entity-decoded form: a browser
+    decodes entities in attribute values (href="&#106;avascript:...") before
+    parsing the URL scheme, so a byte-literal regex on raw text alone misses
+    that class of bypass.
+    """
+    for candidate in (svg, unescape(svg)):
+        for pattern, label in _ACTIVE_SVG_PATTERNS:
+            if pattern.search(candidate):
+                raise ValueError(
+                    f"SVG contains {label}; refusing to wrap. "
+                    "Produce inert SVG — the local renderers (render_line_svg.py, "
+                    "small_multiples.py, quartile_plot.py, range_frame.py) always do."
+                )
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -149,9 +158,17 @@ def main() -> None:
     a = p.parse_args()
 
     try:
-        svg_text_content = Path(a.svg).read_text()
+        svg_text_content = Path(a.svg).read_text(encoding="utf-8")
     except OSError as e:
         print(f"ERROR[svg-read]: cannot read SVG {a.svg}: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    # Fail fast, before any disk writes: reject script-bearing SVG up front
+    # rather than after copying assets and creating the output directory.
+    try:
+        reject_active_svg(svg_text_content)
+    except ValueError as e:
+        print(f"ERROR[active-svg]: {e}", file=sys.stderr)
         sys.exit(1)
 
     out_html = Path(a.out)
@@ -170,7 +187,7 @@ def main() -> None:
         print(f"ERROR[active-svg]: {e}", file=sys.stderr)
         sys.exit(1)
 
-    out_html.write_text(html)
+    out_html.write_text(html, encoding="utf-8")
     print(f"wrote {out_html} ({len(html)} bytes)")
     if not a.no_assets:
         print(f"assets at {out_html.parent / ASSETS_SUBDIR}/  (open the HTML in any browser)")

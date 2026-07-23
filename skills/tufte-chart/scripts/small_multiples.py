@@ -27,12 +27,14 @@ def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
     facets = {}
     for d in data:
         facets.setdefault(d[facet_key], []).append((d[x_key], d[y_key]))
-    for k in facets:
-        facets[k].sort(key=lambda p: p[0])
     if not facets:
         raise ValueError("no facets in data")
-    require_numeric((v for pts in facets.values() for p in pts for v in p),
-                    "x and y values")
+
+    xs_all = [x for pts in facets.values() for x, _ in pts]
+    ys_all = [y for pts in facets.values() for _, y in pts]
+    require_numeric(xs_all + ys_all, "x and y values")
+    for k in facets:
+        facets[k].sort(key=lambda p: p[0])
 
     if order:
         names = [n for n in order if n in facets]
@@ -44,8 +46,6 @@ def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
     cols = max(1, min(cols, n))
     rows = math.ceil(n / cols)
 
-    xs_all = [x for pts in facets.values() for x, _ in pts]
-    ys_all = [y for pts in facets.values() for _, y in pts]
     xmin, xmax, ymin, ymax = min(xs_all), max(xs_all), min(ys_all), max(ys_all)
     if xmax == xmin or ymax == ymin:
         raise ValueError("x and y must each span a range across the dataset")

@@ -3,6 +3,7 @@
 Centralises the escaping policy applied to user/data-controlled text that
 flows into SVG <text> nodes.
 """
+import math
 from html import escape
 
 
@@ -16,7 +17,11 @@ def svg_text(value: object) -> str:
 
 
 def require_numeric(values, what: str) -> None:
-    """Raise ValueError unless every value is a real number (bool excluded)."""
+    """Raise ValueError unless every value is a finite real number (bool excluded).
+
+    json.loads accepts bare NaN/Infinity by default; those pass isinstance(v,
+    float) but break min/max/scaling downstream, so they're rejected here too.
+    """
     for v in values:
-        if isinstance(v, bool) or not isinstance(v, (int, float)):
-            raise ValueError(f"{what} must be numbers, got {v!r}")
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            raise ValueError(f"{what} must be finite numbers, got {v!r}")

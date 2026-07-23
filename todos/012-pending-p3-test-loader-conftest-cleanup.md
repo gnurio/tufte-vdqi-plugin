@@ -9,7 +9,7 @@ dependencies: []
 # Test loader uses importlib hack; switch to conftest.py + sys.path
 
 ## Problem Statement
-`tests/test_text_escaping.py` loads each renderer module via `importlib.util.spec_from_file_location` because `scripts/` is not a package and the parent dir `render-tufte-chart` has a hyphen (not a valid Python identifier). It works but is verbose and will be repeated in every new test file.
+`tests/test_text_escaping.py` loads each renderer module via `importlib.util.spec_from_file_location` because `scripts/` is not a package and the parent dir `tufte-chart` has a hyphen (not a valid Python identifier). It works but is verbose and will be repeated in every new test file.
 
 ## Findings
 - **kieran-python-reviewer**: P2 — suggests `conftest.py` with `sys.path.insert(0, str(SCRIPTS_DIR))` so tests can use plain `import render_line_svg`
@@ -18,7 +18,7 @@ dependencies: []
 ## Proposed Solutions
 
 ### Option A — conftest.py + sys.path (Recommended)
-Add `skills/render-tufte-chart/tests/conftest.py`:
+Add `skills/tufte-chart/tests/conftest.py`:
 ```python
 import sys
 from pathlib import Path
@@ -39,8 +39,8 @@ Keep the importlib loader; document the hyphen-dir constraint.
 Option A — do when adding the next test file (e.g., for [[009]]).
 
 ## Technical Details
-- New file: `skills/render-tufte-chart/tests/conftest.py`
-- Refactor: `skills/render-tufte-chart/tests/test_text_escaping.py:18-34` (remove `_load` helper)
+- New file: `skills/tufte-chart/tests/conftest.py`
+- Refactor: `skills/tufte-chart/tests/test_text_escaping.py:18-34` (remove `_load` helper)
 
 ## Acceptance Criteria
 - [ ] `conftest.py` exists and prepends scripts dir to sys.path

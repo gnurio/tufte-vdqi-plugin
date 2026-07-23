@@ -22,12 +22,12 @@ from _svg_text import require_numeric, svg_text
 
 
 def render(data, title, series="", subtitle="", width=760, height=420):
-    pts = sorted(data, key=lambda d: d["x"])
-    if len(pts) < 2:
+    if len(data) < 2:
         raise ValueError("need at least two data points")
+    require_numeric([d["x"] for d in data] + [d["y"] for d in data], "x and y values")
+    pts = sorted(data, key=lambda d: d["x"])
     xs = [p["x"] for p in pts]
     ys = [p["y"] for p in pts]
-    require_numeric(xs + ys, "x and y values")
     xmin, xmax, ymin, ymax = min(xs), max(xs), min(ys), max(ys)
     if xmax == xmin or ymax == ymin:
         raise ValueError("x and y must each span a range")

@@ -46,7 +46,7 @@ Less complete but cheaper.
 Option A.
 
 ## Technical Details
-- File: `skills/render-tufte-chart/tests/test_text_escaping.py:44-48` (`_assert_no_injection`)
+- File: `skills/tufte-chart/tests/test_text_escaping.py:44-48` (`_assert_no_injection`)
 
 ## Acceptance Criteria
 - [ ] `_assert_no_injection` parses SVG and asserts structurally

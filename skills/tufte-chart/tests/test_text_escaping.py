@@ -13,6 +13,7 @@ Run from the repo root:
     python3 skills/tufte-chart/tests/test_text_escaping.py
 """
 import importlib.util
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -304,6 +305,16 @@ class MirroredFileDriftTests(unittest.TestCase):
         b = self.SKILLS_DIR / "tufte-critique" / "scripts" / "deflate.py"
         self.assertEqual(a.read_bytes(), b.read_bytes(),
                          "deflate.py has drifted between the two skills")
+
+    def test_manifest_version_and_description_match(self):
+        repo_root = self.SKILLS_DIR.parent
+        plugin = json.loads((repo_root / ".claude-plugin" / "plugin.json").read_text())
+        marketplace = json.loads((repo_root / ".claude-plugin" / "marketplace.json").read_text())
+        entry = marketplace["plugins"][0]
+        self.assertEqual(plugin["version"], entry["version"],
+                         "plugin.json and marketplace.json versions have drifted")
+        self.assertEqual(plugin["description"], entry["description"],
+                         "plugin.json and marketplace.json descriptions have drifted")
 
 
 if __name__ == "__main__":
