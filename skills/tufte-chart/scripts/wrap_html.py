@@ -99,17 +99,23 @@ _ACTIVE_SVG_PATTERNS = [
      "event-handler attribute (on*=)"),
 ]
 
-# Checked separately, against entity-decoded and TAB/LF/CR-stripped
-# candidates too (see reject_active_svg): a browser normalizes an
-# attribute's VALUE this way before parsing its URL scheme, so
-# java&#9;script: still executes despite not being the contiguous string
-# "javascript:". None of the patterns above need this treatment — a parser
-# never re-parses decoded text-node or attribute-name content as new markup,
-# so decoding there only creates false positives on legitimately-escaped
-# chart text (e.g. a title reading "Usage of <script> tags", stored as the
-# harmless text "&lt;script&gt;").
-_JAVASCRIPT_URL_PATTERN = re.compile(
-    rf"\b{_URL_ATTRS}\s*=\s*['\"]?\s*javascript:", re.IGNORECASE)
+# Checked separately (see reject_active_svg): a real attribute value only
+# ever exists in raw markup between a LITERAL quote character right after
+# "attr=" — svg_text() escapes every quote character, so this can never be
+# satisfied by legitimately-escaped chart text no matter what words the
+# text contains (a title reading 'the URL was href="javascript:..."' is
+# stored as the harmless text 'href=&quot;javascript:...&quot;', which has
+# no literal quote next to "href="). Only the captured value between real
+# quotes is then decoded and normalized to catch java&#9;script:-style
+# obfuscation, since a browser applies both normalizations to an
+# attribute's VALUE before parsing its URL scheme.
+# Trade-off: a genuinely unquoted attack (<a href=javascript:...> with no
+# quotes at all) is valid HTML this pattern won't catch — accepted because
+# none of the four local renderers ever emit unquoted attributes, and the
+# false-positive cost of a laxer match hits every real chart title.
+_URL_ATTR_VALUE_PATTERN = re.compile(
+    rf"\b{_URL_ATTRS}\s*=\s*(['\"])(.*?)\1", re.IGNORECASE | re.DOTALL)
+_JAVASCRIPT_SCHEME_PATTERN = re.compile(r"^\s*javascript:", re.IGNORECASE)
 
 
 def _strip_url_whitespace(s: str) -> str:
@@ -131,21 +137,20 @@ def reject_active_svg(svg: str) -> None:
     """Raise ValueError if the SVG contains script-bearing constructs.
 
     Tag/attribute-name/DOCTYPE patterns are checked against the raw text
-    only. The javascript:-URL pattern is additionally checked against the
-    text with HTML entities decoded (href="&#106;avascript:...") and with
-    TAB/LF/CR stripped (java&#9;script:), since a browser normalizes an
-    attribute's VALUE both ways before parsing its URL scheme — see
-    _JAVASCRIPT_URL_PATTERN's comment for why the other patterns don't need
-    this.
+    only. Real (literally-quoted) URL-attribute values are additionally
+    checked with HTML entities decoded and TAB/LF/CR stripped, to catch
+    java&#9;script:-style scheme obfuscation — see _URL_ATTR_VALUE_PATTERN's
+    comment for why this stays scoped to real attribute values only.
     """
     for pattern, label in _ACTIVE_SVG_PATTERNS:
         if pattern.search(svg):
             _refuse(label)
 
-    candidates = {svg, unescape(svg)}
-    candidates |= {_strip_url_whitespace(c) for c in list(candidates)}
-    for candidate in candidates:
-        if _JAVASCRIPT_URL_PATTERN.search(candidate):
+    for match in _URL_ATTR_VALUE_PATTERN.finditer(svg):
+        raw_value = match.group(2)
+        candidates = {raw_value, unescape(raw_value)}
+        candidates |= {_strip_url_whitespace(c) for c in list(candidates)}
+        if any(_JAVASCRIPT_SCHEME_PATTERN.search(c) for c in candidates):
             _refuse("javascript: URL")
 
     # Check against the prolog-stripped text: a leading <?xml?> declaration

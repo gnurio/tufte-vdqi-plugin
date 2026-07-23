@@ -302,10 +302,9 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
 
     def test_accepts_title_that_mentions_tag_names_as_text(self):
         # svg_text() escapes a title like "Usage of <script> tags over time"
-        # into the harmless text "&lt;script&gt;". Only the javascript:-URL
-        # check should look at entity-decoded text (see its comment); tag
-        # patterns must stay on the raw text or this legitimate chart gets
-        # rejected as if it contained a live <script> element.
+        # into the harmless text "&lt;script&gt;". Tag patterns must stay on
+        # the raw text or this legitimate chart gets rejected as if it
+        # contained a live <script> element.
         # iframe stands in for the whole iframe/embed/object/img/meta/link/
         # base/style alternation — they're one compiled regex, so testing
         # more than one of them adds no additional coverage.
@@ -314,6 +313,26 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
                 [{"x": 1, "y": 2}, {"x": 2, "y": 3}],
                 title=f"Usage of <{tag}> tags over time")
             wrap_html.reject_active_svg(svg)  # should not raise
+
+    def test_accepts_title_that_mentions_javascript_url_as_text(self):
+        # svg_text() escapes quote characters too, so a title reading
+        # 'Links using href="javascript:alert(1)"' is stored as the harmless
+        # text 'href=&quot;javascript:alert(1)&quot;' — no literal quote sits
+        # next to "href=" in the raw markup, so it must not be treated as a
+        # real attribute value.
+        svg = render_line_svg.render(
+            [{"x": 1, "y": 2}, {"x": 2, "y": 3}],
+            title='Links using href="javascript:alert(1)"')
+        wrap_html.reject_active_svg(svg)  # should not raise
+
+    def test_accepts_title_with_bare_unquoted_javascript_mention(self):
+        # svg_text() doesn't escape "=" or ":", so plain prose containing
+        # those characters must not look like an attribute assignment either
+        # — only a literal quote character makes it one.
+        svg = render_line_svg.render(
+            [{"x": 1, "y": 2}, {"x": 2, "y": 3}],
+            title="the URL was href=javascript:alert(1) beware")
+        wrap_html.reject_active_svg(svg)  # should not raise
 
 
 class BuildHtmlGuardTests(unittest.TestCase):
