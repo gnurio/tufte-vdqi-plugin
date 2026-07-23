@@ -127,7 +127,10 @@ def reject_active_svg(svg: str) -> None:
                     "Produce inert SVG — the local renderers (render_line_svg.py, "
                     "small_multiples.py, quartile_plot.py, range_frame.py) always do."
                 )
-    trimmed = svg.strip()
+    # Check against the prolog-stripped text: a leading <?xml?> declaration
+    # (which strip_xml_decl removes before inlining) is benign and must not
+    # count as "content before the <svg> root".
+    trimmed = strip_xml_decl(svg).strip()
     if not (re.match(rf"<{_NS_PREFIX}svg\b", trimmed, re.IGNORECASE)
             and re.search(r"</svg\s*>\s*\Z", trimmed, re.IGNORECASE)):
         raise ValueError(

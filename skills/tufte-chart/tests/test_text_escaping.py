@@ -282,6 +282,24 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
             "</svg>", '<defs><g id="x"><rect/></g></defs><use href="#x"/></svg>')
         wrap_html.reject_active_svg(svg)  # should not raise
 
+    def test_accepts_svg_with_xml_declaration(self):
+        # A benign SVG opening with an XML prolog is safe; strip_xml_decl
+        # removes the prolog before inlining, so the single-root check must
+        # tolerate it rather than treat it as content before the <svg> root.
+        svg = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+               '<svg xmlns="http://www.w3.org/2000/svg">'
+               '<rect width="10" height="10"/></svg>')
+        wrap_html.reject_active_svg(svg)  # should not raise
+
+    def test_rejects_trailing_content_even_with_xml_declaration(self):
+        # Tolerating the prolog must not widen into tolerating trailing
+        # active content after the real </svg> root.
+        svg = ('<?xml version="1.0"?>\n'
+               '<svg xmlns="http://www.w3.org/2000/svg"></svg>'
+               '<iframe src="javascript:alert(1)"></iframe>')
+        with self.assertRaisesRegex(ValueError, "iframe"):
+            wrap_html.reject_active_svg(svg)
+
 
 class BuildHtmlGuardTests(unittest.TestCase):
     """build_html() must invoke reject_active_svg on every SVG so library
