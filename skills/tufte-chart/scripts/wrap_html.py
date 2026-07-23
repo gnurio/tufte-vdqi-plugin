@@ -33,9 +33,46 @@ from pathlib import Path
 # wrap_html.py emits an HTML page that browsers will parse, so any of these
 # in an inlined SVG would run in the page's origin. Every SVG goes through
 # this check, no exceptions.
-# ponytail: regex rejector, not a parser — swap for an XML-parser allowlist
-# if this ever routinely wraps hostile third-party SVG.
+# ponytail: regex rejector, not a parser — a full XML parser would also catch
+# active tags outside this denylist sandwiched between two <svg>...</svg>
+# blocks; swap to one if this ever routinely wraps hostile third-party SVG.
 _NS_PREFIX = r"(?:[A-Za-z][\w.-]*:)?"
+
+# Known browser-recognized event-handler attribute names (HTML DOM + SVG +
+# SMIL). Matching only these — not an open "on[a-zA-Z]+" — avoids false
+# positives on ordinary chart text that happens to start with "on" (e.g. a
+# title reading "Online = 87%"), since an unrecognized on*= attribute name
+# never executes in a browser regardless of spelling.
+_EVENT_HANDLER_NAMES = (
+    "abort activate afterprint animationcancel animationend animationiteration "
+    "animationstart auxclick beforecopy beforecut beforeinput beforepaste "
+    "beforeprint beforeunload begin blur cancel canplay canplaythrough change "
+    "click close contextmenu copy cuechange cut dblclick drag dragend "
+    "dragenter dragleave dragover dragstart drop durationchange emptied end "
+    "ended error focus focusin focusout formdata fullscreenchange "
+    "fullscreenerror gotpointercapture hashchange input invalid keydown "
+    "keypress keyup load loadeddata loadedmetadata loadstart "
+    "lostpointercapture message mousedown mouseenter mouseleave mousemove "
+    "mouseout mouseover mouseup mousewheel offline online open pagehide "
+    "pageshow paste pause play playing pointercancel pointerdown "
+    "pointerenter pointerleave pointermove pointerout pointerover pointerup "
+    "popstate progress ratechange repeat reset resize scroll scrollend "
+    "securitypolicyviolation seeked seeking select selectionchange "
+    "selectstart slotchange stalled storage submit suspend timeupdate "
+    "toggle touchcancel touchend touchmove touchstart transitioncancel "
+    "transitionend transitionrun transitionstart unhandledrejection unload "
+    "volumechange waiting webkitanimationend webkitanimationiteration "
+    "webkitanimationstart webkittransitionend wheel"
+).split()
+
+# URL-bearing attributes checked for a javascript: value below — href /
+# xlink:href (also checked separately for <use>/<image>, more strictly),
+# plus the HTML equivalents an embedded-but-not-actually-SVG tag could use.
+# Matched only when the value is actually "javascript:" (see the pattern
+# below), not on bare presence — "background" and "data" are ordinary
+# English words a chart title could legitimately contain.
+_URL_ATTRS = r"(?:href|xlink:href|src|data|action|formaction|poster|background)"
+
 _ACTIVE_SVG_PATTERNS = [
     (re.compile(r"<!DOCTYPE", re.IGNORECASE),
      "<!DOCTYPE declaration (possible XXE/entity injection)"),
@@ -43,6 +80,11 @@ _ACTIVE_SVG_PATTERNS = [
      "<script> element"),
     (re.compile(rf"<\s*{_NS_PREFIX}foreignObject\b", re.IGNORECASE),
      "<foreignObject> element"),
+    # HTML embedding/active-content tags: not valid SVG, but wrap_html
+    # inlines the raw string into an HTML page without validating SVG-ness,
+    # so a "chart.svg" containing one of these renders as live HTML anyway.
+    (re.compile(r"<\s*(?:iframe|embed|object|img|meta|link|base|style)\b", re.IGNORECASE),
+     "HTML embedding/active-content element (iframe/embed/object/img/meta/link/base/style)"),
     (re.compile(rf"<\s*{_NS_PREFIX}(?:animate(?:Transform|Motion)?|set)\b",
                 re.IGNORECASE),
      "SMIL animation element (<animate>/<set>)"),
@@ -53,24 +95,31 @@ _ACTIVE_SVG_PATTERNS = [
     (re.compile(rf"<\s*{_NS_PREFIX}(?:use|image)\b[^>]*?\b(?:xlink:)?href\s*=(?!\s*['\"]?\s*#)",
                 re.IGNORECASE),
      "<use>/<image> with non-fragment href"),
-    # \b, not a literal \s: "<svg/onload=..." (slash instead of space as the
-    # attribute separator) is valid SVG/HTML and was missed by a whitespace-only match.
-    (re.compile(r"\bon[a-zA-Z]+\s*=", re.IGNORECASE),
+    (re.compile(r"\bon(?:" + "|".join(_EVENT_HANDLER_NAMES) + r")\s*=", re.IGNORECASE),
      "event-handler attribute (on*=)"),
-    (re.compile(r"\b(?:xlink:)?href\s*=\s*['\"]?\s*javascript:", re.IGNORECASE),
+    (re.compile(rf"\b{_URL_ATTRS}\s*=\s*['\"]?\s*javascript:", re.IGNORECASE),
      "javascript: URL"),
 ]
+
+
+def _strip_url_whitespace(s: str) -> str:
+    """Remove TAB/LF/CR — browsers strip these from URLs before parsing the
+    scheme, so "java&#9;script:" decodes to "java<TAB>script:", which still
+    executes even though it isn't the contiguous string "javascript:"."""
+    return s.translate({0x09: None, 0x0A: None, 0x0D: None})
 
 
 def reject_active_svg(svg: str) -> None:
     """Raise ValueError if the SVG contains script-bearing constructs.
 
-    Checks both the raw text and its HTML-entity-decoded form: a browser
-    decodes entities in attribute values (href="&#106;avascript:...") before
-    parsing the URL scheme, so a byte-literal regex on raw text alone misses
-    that class of bypass.
+    Checks the raw text, its HTML-entity-decoded form (a browser decodes
+    entities in attribute values — href="&#106;avascript:..." — before
+    parsing the URL scheme), and both of those with TAB/LF/CR stripped (a
+    browser also discards those from URLs before recognizing the scheme).
     """
-    for candidate in (svg, unescape(svg)):
+    candidates = {svg, unescape(svg)}
+    candidates |= {_strip_url_whitespace(c) for c in list(candidates)}
+    for candidate in candidates:
         for pattern, label in _ACTIVE_SVG_PATTERNS:
             if pattern.search(candidate):
                 raise ValueError(
@@ -78,6 +127,15 @@ def reject_active_svg(svg: str) -> None:
                     "Produce inert SVG — the local renderers (render_line_svg.py, "
                     "small_multiples.py, quartile_plot.py, range_frame.py) always do."
                 )
+    trimmed = svg.strip()
+    if not (re.match(rf"<{_NS_PREFIX}svg\b", trimmed, re.IGNORECASE)
+            and re.search(r"</svg\s*>\s*\Z", trimmed, re.IGNORECASE)):
+        raise ValueError(
+            "SVG must be a single <svg>...</svg> document with nothing before "
+            "or after it; refusing to wrap. Produce inert SVG — the local "
+            "renderers (render_line_svg.py, small_multiples.py, quartile_plot.py, "
+            "range_frame.py) always do."
+        )
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent

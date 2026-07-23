@@ -193,6 +193,42 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "javascript"):
             wrap_html.reject_active_svg(svg)
 
+    # --- regression coverage for the issues found via /codex review ---
+
+    def test_rejects_tab_encoded_javascript_url(self):
+        # &#9; decodes to a literal TAB; browsers strip TAB/LF/CR from URLs
+        # before recognizing the scheme, so "java<TAB>script:" still executes
+        # even though it isn't the contiguous string "javascript:".
+        svg = self.BENIGN_SVG.replace(
+            "</svg>", '<a href="java&#9;script:alert(1)">x</a></svg>')
+        with self.assertRaisesRegex(ValueError, "javascript"):
+            wrap_html.reject_active_svg(svg)
+
+    def test_rejects_trailing_iframe_after_svg_root(self):
+        # No pattern above matches <iframe>, so content after the real </svg>
+        # root sailed through untouched and rendered as live HTML.
+        svg = self.BENIGN_SVG + '<iframe src="javascript:alert(1)"></iframe>'
+        with self.assertRaisesRegex(ValueError, "iframe"):
+            wrap_html.reject_active_svg(svg)
+
+    def test_rejects_object_data_javascript_url(self):
+        svg = self.BENIGN_SVG + '<object data="javascript:alert(1)"></object>'
+        with self.assertRaisesRegex(ValueError, "object"):
+            wrap_html.reject_active_svg(svg)
+
+    def test_accepts_benign_title_starting_with_on(self):
+        # "Online = 87%" must not be flagged as an onload-style event
+        # handler just because it starts with the letters "on".
+        svg = '<svg xmlns="http://www.w3.org/2000/svg"><text>Online = 87%</text></svg>'
+        wrap_html.reject_active_svg(svg)  # should not raise
+
+    def test_accepts_benign_title_with_url_attr_word(self):
+        # "Data = 42" / "Background = white" must not be flagged just for
+        # containing the words "data"/"background" followed by "=".
+        for text in ("Data = 42", "Background = white noise"):
+            svg = f'<svg xmlns="http://www.w3.org/2000/svg"><text>{text}</text></svg>'
+            wrap_html.reject_active_svg(svg)  # should not raise
+
     # --- regression coverage for the issues found in /compound-engineering:ce-review ---
 
     def test_rejects_namespaced_script(self):
