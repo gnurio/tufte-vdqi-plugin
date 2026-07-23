@@ -13,14 +13,25 @@ the matching genre to switch to (Part C). When the graphic resembles a famous
 failure or success, name the resemblance (Parts E/F) — that beats "looks wrong."
 
 Both skills read this file:
-- `assess-graphical-excellence` uses Parts A, D, E to score and diagnose, and
+- `tufte-critique` uses Parts A, D, E to score and diagnose, and
   Parts C and F to recommend.
-- `render-tufte-chart` uses Parts B and C as a construction checklist and
-  per-genre recipe, and Part G as numeric defaults.
+- `tufte-chart` uses Parts B and C as a construction checklist and
+  per-genre recipe, and Parts G and H as numeric and typographic defaults.
 
 ---
 
 ## Part A — The nine criteria for graphical excellence
+
+This nine-criterion rubric is *derived from* VDQI — it operationalizes the
+book's own checklist (p.13): "Graphical displays should: show the data; induce
+the viewer to think about the substance rather than about methodology, graphic
+design, the technology of graphic production, or something else; avoid
+distorting what the data have to say; present many numbers in a small space;
+make large data sets coherent; encourage the eye to compare different pieces
+of data; reveal the data at several levels of detail, from a broad overview to
+the fine structure; serve a reasonably clear purpose: description,
+exploration, tabulation, or decoration; be closely integrated with the
+statistical and verbal descriptions of a data set."
 
 Score each 0–10 with a chart-specific observation. The weights reflect that
 honesty matters more than elegance. Numeric anchors come from VDQI.
@@ -29,7 +40,7 @@ honesty matters more than elegance. Numeric anchors come from VDQI.
 |---|-----------|:--:|------------------|-------------|--------|
 | 1 | Integrity | 3× | Truncated axis, distorted area, missing baseline, cherry-picked range | Lie factor outside 0.95–1.05 is "substantial distortion" (p.57) | B1, E |
 | 2 | Proportionality | 2× | Visual ≠ data; 1-D quantity drawn as 2-D area or 3-D volume | Tufte's catalogued worst cases: 14.8 (NYT MPG, p.57), 9.5 (WaPo derricks, p.62), **59.4** (TIME 3-D barrel, "a record", p.71) | B1, D-Dimensionality |
-| 3 | Data-ink ratio | 2× | Heavy grid, background, border, 3-D, shadows dominate marks | Tufte reaches 0.7 redesigning a scatterplot (p.95) and 0.9 a periodic chart (p.103); editing routinely lifts ratio from 0.1–0.2 to ~1.0 (p.136) | B5 / D-Grid |
+| 3 | Data-ink ratio | 2× | Heavy grid, background, border, 3-D, shadows dominate marks | Tufte reaches 0.7 redesigning a scatterplot (p.95) and 0.9 a periodic chart (p.103); "in several cases, the data-ink ratio increased from .1 or .2 to nearly 1.0" (p.136) | B5 / D-Grid |
 | 4 | Redundant ink | 1× | Same datum encoded multiple ways (fill + border + label + height) | Tufte erased ~65% of original ink in one bar-chart redesign with zero data loss (p.101) | B6 |
 | 5 | Data density | 1× | Tiny payload of numbers occupies a large area | "Social Indicators, 1973" managed only **0.15 numbers/in²** and was "overwrought" (p.162); excellent graphics reach **181/in²** (NYT weather, p.30), **9,000/in²** (French communes), **110,000/in²** (galaxy map, "the current record", p.166) | B3, C-Tables |
 | 6 | Integration | 1× | Separate legend box; labels detached from marks | — | B4 |
@@ -45,6 +56,21 @@ carrying (variable) dimensions depicted should not exceed the number of
 dimensions in the data." Encoding a 1-D quantity with 2-D area or 3-D volume is
 the single largest cause of inflated lie factors.
 
+**The six principles of graphical integrity** (VDQI p.77) — the source of the
+Integrity, Proportionality and Context criteria above:
+1. "The representation of numbers, as physically measured on the surface of
+   the graphic itself, should be directly proportional to the numerical
+   quantities represented."
+2. "Clear, detailed, and thorough labeling should be used to defeat graphical
+   distortion and ambiguity. Write out explanations of the data on the graphic
+   itself. Label important events in the data."
+3. "Show data variation, not design variation."
+4. "In time-series displays of money, deflated and standardized units of
+   monetary measurement are nearly always better than nominal units."
+5. "The number of information-carrying (variable) dimensions depicted should
+   not exceed the number of dimensions in the data."
+6. "Graphics must not quote data out of context."
+
 **Common grading mistake**: do not confuse a *design flaw* (ugly but honest)
 with an *integrity violation* (the graphic misleads). Reserve the lowest
 integrity scores for graphics that cause the reader to misread the numbers.
@@ -52,6 +78,15 @@ integrity scores for graphics that cause the reader to misread the numbers.
 ---
 
 ## Part B — The seven remedies
+
+The remedies apply VDQI's **five principles of data-ink maximization**
+(summary list, p.105):
+
+> "Above all else show the data.
+> Maximize the data-ink ratio.
+> Erase non-data-ink.
+> Erase redundant data-ink.
+> Revise and edit."
 
 ### B1 — Lie factor + dimensionality
 Formula: `lie_factor = (percentage change shown in the graphic) / (percentage change in the data)`. Acceptable range **0.95–1.05** (VDQI p.57). Outside it, the graphic distorts; > 1 overstates, < 1 understates. Use absolute values.
@@ -111,13 +146,13 @@ For each: Tufte's own name, the VDQI page, the construction recipe (quoted where
 **Tufte's term**: "quartile plot."
 **Recipe**: "The straightedge need only be placed on the paper once to draw the quartile plot." Erase the box around the interquartile range; leave a single straightedge spanning the full range, with the middle half emphasized by **offsetting** it from the median line (or by line-weight change). "An erased version requires only 10 verticals to show the same information."
 **Use**: informal/exploratory data analysis; side-by-side distribution comparison.
-**Script**: `render-tufte-chart/scripts/quartile_plot.py`.
+**Script**: `tufte-chart/scripts/quartile_plot.py`.
 
 ### C2 — Range-frame plot (redesigned scatter) — VDQI pp.130–132
 **Tufte's term**: "range-frame."
 **Recipe**: See B2. Trim each axis line to span only data min..max; label both endpoints.
 **Use**: "should replace the non-data-bearing frame in many graphical applications."
-**Script**: `render-tufte-chart/scripts/range_frame.py`.
+**Script**: `tufte-chart/scripts/range_frame.py`.
 
 ### C3 — Dot-dash plot — VDQI p.133
 **Tufte's term**: "dot-dash-plot."
@@ -133,7 +168,7 @@ For each: Tufte's own name, the VDQI page, the construction recipe (quoted where
 ### C5 — Small multiples — VDQI p.42, pp.170, 175
 See B3 for the construction rules. Tufte's exemplar in VDQI: McRae et al.'s LA air pollutant maps.
 **Use**: "inevitably comparative, deftly multivariate."
-**Script**: `render-tufte-chart/scripts/small_multiples.py`.
+**Script**: `tufte-chart/scripts/small_multiples.py`.
 
 ### C6 — Supertable / text-table / table-graphic — VDQI pp.145, 159, 178–179
 **Tufte's terms**: "text-table," "supertable," "table-graphic."
@@ -156,7 +191,7 @@ See B3 for the construction rules. Tufte's exemplar in VDQI: McRae et al.'s LA a
 ### C10 — Time-series — VDQI pp.28–30
 **Recipe**: One dimension marches at a regular cadence (seconds → millennia).
 **Tufte's use rule**: "Time-series displays are at their best for big data sets with real variability." **Do not** use a time-series for simple linear changes: "Why waste the power of data graphics on simple linear changes, which can usually be better summarized in one or two numbers? ... graphics should be reserved for the richer, more complex, more difficult statistical material."
-**Script**: `render-tufte-chart/scripts/render_line_svg.py`.
+**Script**: `tufte-chart/scripts/render_line_svg.py`.
 
 **Note on absences**: **sparklines** and **slopegraphs** are NOT in VDQI — Tufte introduced sparklines in *Beautiful Evidence*. Add those sources to the notebook before claiming VDQI coverage of them.
 
@@ -242,10 +277,47 @@ When recommending a redesign, name an exemplar to emulate. "This data calls for 
 Quick-reference card pulled from across the book.
 
 - **Lie factor**: `(visual change %) / (data change %)`. Acceptable **0.95–1.05** (p.57). Tufte's catalogued worst cases: **14.8** (NYT MPG), **9.4–9.5** (oil derricks / barrels in 2-D), **59.4** (oil barrel in 3-D, "a record").
-- **Data-ink ratio**: `data-ink / total ink`, equivalently `1.0 − proportion erasable without data loss` (p.93). Editing routinely lifts ratio from **0.1–0.2 to ~1.0** (p.136).
+- **Data-ink ratio**: `data-ink / total ink`, equivalently `1.0 − proportion erasable without data loss` (p.93). "In several cases, the data-ink ratio increased from **.1 or .2 to nearly 1.0**" (p.136).
+- **Multifunctioning elements** (p.139): "Mobilize every graphical element, perhaps several times over, to show the data."
 - **Data density** (`entries / area`): 0.15 numbers/in² is "overwrought" (p.162); aim for ≥ a few/in² for ordinary work; Tufte's record exemplars reach 110,000–250,000/in² (p.166–168).
 - **Dimensionality rule** (p.71): "The number of information-carrying dimensions depicted should not exceed the number of dimensions in the data." 1-D quantity ⇒ 1-D encoding (length/position); never area or volume.
 - **Tables vs graphics**: for **≤ 20 numbers**, default to a table (p.56). "A table is nearly always better than a dumb pie chart."
 - **Aspect ratio**: graphics should generally be wider than tall — "move toward horizontal graphics about 50 percent wider than tall" (p.190). Golden Rectangle ≈ **1.618** (p.189).
 - **Redundant-ink budget**: in one worked redesign Tufte erased **~65%** of original ink with zero data loss (p.101). Most production charts have plenty to give back.
 - **Monetary time series**: deflate to real <base-year> units before plotting (B7). VDQI calls out Fiorina (p.66) for failing to do this.
+
+---
+
+## Part H — The friendly data graphic (VDQI p.183)
+
+Tufte's two-column test for "accessible complexity" — the source for the
+Typography and Clarity criteria (Part A) and the direct-labeling remedy (B4).
+A graphic is **friendly** when, row by row:
+
+| Friendly | Unfriendly |
+|---|---|
+| words are spelled out, mysterious and elaborate encoding avoided | abbreviations abound, requiring the viewer to sort through text to decode abbreviations |
+| words run from left to right, the usual direction for reading occidental languages | words run vertically, particularly along the Y-axis; words run in several different directions |
+| little messages help explain data | graphic is cryptic, requires repeated references to scattered text |
+| elaborately encoded shadings, cross-hatching, and colors are avoided; instead, labels are placed on the graphic itself; no legend is required | obscure codings require going back and forth between legend and graphic |
+| graphic attracts viewer, provokes curiosity | graphic is repellent, filled with chartjunk |
+| colors, if used, are chosen so that the color-deficient and color-blind (5 to 10 percent of viewers) can make sense of the graphic | design insensitive to color-deficient viewers; red and green used for essential contrasts |
+| type is clear, precise, modest; lettering may be done by hand | type is clotted, overbearing |
+| type is upper-and-lower case, with serifs | type is all capitals, sans serif |
+
+On type, Tufte quotes Albers (p.183): "words consisting of only capital
+letters present the most difficult reading — because of their equal height,
+equal volume, and, with most, their equal width."
+
+---
+
+## Closing note — how to hold these rules (VDQI Epilogue, p.191)
+
+"The principles should not be applied rigidly or in a peevish spirit; they are
+not logically or mathematically certain; and it is better to violate any
+principle than to place graceless or inelegant marks on paper."
+
+"What is to be sought in designs for the display of information is the clear
+portrayal of complexity. Not the complication of the simple; rather the task
+of the designer is to give visual access to the subtle and the difficult —
+that is, the revelation of the complex."
