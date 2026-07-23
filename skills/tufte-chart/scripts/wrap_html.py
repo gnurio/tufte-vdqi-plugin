@@ -97,9 +97,21 @@ _ACTIVE_SVG_PATTERNS = [
      "<use>/<image> with non-fragment href"),
     (re.compile(r"\bon(?:" + "|".join(_EVENT_HANDLER_NAMES) + r")\s*=", re.IGNORECASE),
      "event-handler attribute (on*=)"),
-    (re.compile(rf"\b{_URL_ATTRS}\s*=\s*['\"]?\s*javascript:", re.IGNORECASE),
-     "javascript: URL"),
 ]
+
+# Checked separately, against entity-decoded and TAB/LF/CR-stripped
+# candidates too (see reject_active_svg): a browser normalizes an
+# attribute's VALUE this way before parsing its URL scheme, so
+# java&#9;script: still executes despite not being the contiguous string
+# "javascript:". None of the patterns above need this treatment — a parser
+# never re-parses decoded text-node or attribute-name content as new markup,
+# so decoding there only creates false positives on legitimately-escaped
+# chart text (e.g. a title reading "Usage of <script> tags", stored as the
+# harmless text "&lt;script&gt;").
+_JAVASCRIPT_URL_PATTERN = (
+    re.compile(rf"\b{_URL_ATTRS}\s*=\s*['\"]?\s*javascript:", re.IGNORECASE),
+    "javascript: URL",
+)
 
 
 def _strip_url_whitespace(s: str) -> str:
@@ -109,24 +121,36 @@ def _strip_url_whitespace(s: str) -> str:
     return s.translate({0x09: None, 0x0A: None, 0x0D: None})
 
 
+def _refuse(label: str) -> None:
+    raise ValueError(
+        f"SVG contains {label}; refusing to wrap. "
+        "Produce inert SVG — the local renderers (render_line_svg.py, "
+        "small_multiples.py, quartile_plot.py, range_frame.py) always do."
+    )
+
+
 def reject_active_svg(svg: str) -> None:
     """Raise ValueError if the SVG contains script-bearing constructs.
 
-    Checks the raw text, its HTML-entity-decoded form (a browser decodes
-    entities in attribute values — href="&#106;avascript:..." — before
-    parsing the URL scheme), and both of those with TAB/LF/CR stripped (a
-    browser also discards those from URLs before recognizing the scheme).
+    Tag/attribute-name/DOCTYPE patterns are checked against the raw text
+    only. The javascript:-URL pattern is additionally checked against the
+    text with HTML entities decoded (href="&#106;avascript:...") and with
+    TAB/LF/CR stripped (java&#9;script:), since a browser normalizes an
+    attribute's VALUE both ways before parsing its URL scheme — see
+    _JAVASCRIPT_URL_PATTERN's comment for why the other patterns don't need
+    this.
     """
+    for pattern, label in _ACTIVE_SVG_PATTERNS:
+        if pattern.search(svg):
+            _refuse(label)
+
+    js_pattern, js_label = _JAVASCRIPT_URL_PATTERN
     candidates = {svg, unescape(svg)}
     candidates |= {_strip_url_whitespace(c) for c in list(candidates)}
     for candidate in candidates:
-        for pattern, label in _ACTIVE_SVG_PATTERNS:
-            if pattern.search(candidate):
-                raise ValueError(
-                    f"SVG contains {label}; refusing to wrap. "
-                    "Produce inert SVG — the local renderers (render_line_svg.py, "
-                    "small_multiples.py, quartile_plot.py, range_frame.py) always do."
-                )
+        if js_pattern.search(candidate):
+            _refuse(js_label)
+
     # Check against the prolog-stripped text: a leading <?xml?> declaration
     # (which strip_xml_decl removes before inlining) is benign and must not
     # count as "content before the <svg> root".

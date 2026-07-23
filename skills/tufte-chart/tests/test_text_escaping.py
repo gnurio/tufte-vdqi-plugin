@@ -300,6 +300,18 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "iframe"):
             wrap_html.reject_active_svg(svg)
 
+    def test_accepts_title_that_mentions_tag_names_as_text(self):
+        # svg_text() escapes a title like "Usage of <script> tags over time"
+        # into the harmless text "&lt;script&gt;". Only the javascript:-URL
+        # check should look at entity-decoded text (see its comment); tag
+        # patterns must stay on the raw text or this legitimate chart gets
+        # rejected as if it contained a live <script> element.
+        for tag in ("script", "img", "iframe", "style", "foreignObject"):
+            svg = render_line_svg.render(
+                [{"x": 1, "y": 2}, {"x": 2, "y": 3}],
+                title=f"Usage of <{tag}> tags over time")
+            wrap_html.reject_active_svg(svg)  # should not raise
+
 
 class BuildHtmlGuardTests(unittest.TestCase):
     """build_html() must invoke reject_active_svg on every SVG so library
