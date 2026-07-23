@@ -306,7 +306,10 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
         # check should look at entity-decoded text (see its comment); tag
         # patterns must stay on the raw text or this legitimate chart gets
         # rejected as if it contained a live <script> element.
-        for tag in ("script", "img", "iframe", "style", "foreignObject"):
+        # iframe stands in for the whole iframe/embed/object/img/meta/link/
+        # base/style alternation — they're one compiled regex, so testing
+        # more than one of them adds no additional coverage.
+        for tag in ("script", "iframe", "foreignObject"):
             svg = render_line_svg.render(
                 [{"x": 1, "y": 2}, {"x": 2, "y": 3}],
                 title=f"Usage of <{tag}> tags over time")

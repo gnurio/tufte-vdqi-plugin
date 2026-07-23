@@ -108,10 +108,8 @@ _ACTIVE_SVG_PATTERNS = [
 # so decoding there only creates false positives on legitimately-escaped
 # chart text (e.g. a title reading "Usage of <script> tags", stored as the
 # harmless text "&lt;script&gt;").
-_JAVASCRIPT_URL_PATTERN = (
-    re.compile(rf"\b{_URL_ATTRS}\s*=\s*['\"]?\s*javascript:", re.IGNORECASE),
-    "javascript: URL",
-)
+_JAVASCRIPT_URL_PATTERN = re.compile(
+    rf"\b{_URL_ATTRS}\s*=\s*['\"]?\s*javascript:", re.IGNORECASE)
 
 
 def _strip_url_whitespace(s: str) -> str:
@@ -144,12 +142,11 @@ def reject_active_svg(svg: str) -> None:
         if pattern.search(svg):
             _refuse(label)
 
-    js_pattern, js_label = _JAVASCRIPT_URL_PATTERN
     candidates = {svg, unescape(svg)}
     candidates |= {_strip_url_whitespace(c) for c in list(candidates)}
     for candidate in candidates:
-        if js_pattern.search(candidate):
-            _refuse(js_label)
+        if _JAVASCRIPT_URL_PATTERN.search(candidate):
+            _refuse("javascript: URL")
 
     # Check against the prolog-stripped text: a leading <?xml?> declaration
     # (which strip_xml_decl removes before inlining) is benign and must not
