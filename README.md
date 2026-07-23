@@ -39,7 +39,14 @@ Same data, both times. No decorative bars, no arbitrary colors. Cleveland dot pl
 
 The two skills follow the open [SKILL.md agent-skills standard](https://agentskills.io), so they work in any harness that reads it. Each skill directory is self-contained (scripts, reference, assets included) and can be installed on its own.
 
-**Claude Code**
+**Claude Code — from your terminal**
+
+```
+claude plugin marketplace add gnurio/tufte-vdqi-plugin
+claude plugin install tufte-vdqi@tufte-vdqi-marketplace
+```
+
+**Claude Code — inside a session** (typed at the `>` prompt, not the shell)
 
 ```
 /plugin marketplace add gnurio/tufte-vdqi-plugin
