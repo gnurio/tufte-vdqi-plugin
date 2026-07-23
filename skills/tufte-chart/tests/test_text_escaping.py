@@ -10,11 +10,10 @@ payload as the label and assert the payload survives as escaped text, not
 as live markup.
 
 Run from the repo root:
-    python -m unittest skills.render-tufte-chart.tests.test_text_escaping
-or directly:
-    python skills/render-tufte-chart/tests/test_text_escaping.py
+    python3 skills/tufte-chart/tests/test_text_escaping.py
 """
 import importlib.util
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -42,7 +41,6 @@ wrap_html = _load("wrap_html")
 PAYLOAD = '</text><script>alert(1)</script><text>'
 ESCAPED_OPEN_TAG = "&lt;script&gt;"
 ESCAPED_CLOSE_TEXT = "&lt;/text&gt;"
-TRUSTED_MARKER = "<!-- tufte-vdqi: trusted -->"
 
 
 def _assert_no_injection(test: unittest.TestCase, svg: str) -> None:
@@ -121,32 +119,6 @@ class RangeFrameTests(unittest.TestCase):
         _assert_no_injection(self, svg)
 
 
-class RendererProvenanceTests(unittest.TestCase):
-    """Every trusted renderer must stamp the tufte-vdqi marker so wrap_html
-    can distinguish its own output from arbitrary third-party SVG."""
-
-    def test_line_svg_emits_marker(self):
-        svg = render_line_svg.render(
-            [{"x": 1, "y": 2}, {"x": 2, "y": 3}], title="t")
-        self.assertIn(TRUSTED_MARKER, svg)
-
-    def test_small_multiples_emits_marker(self):
-        svg = small_multiples.render(
-            [{"facet": "A", "x": 1, "y": 1}, {"facet": "A", "x": 2, "y": 2}],
-            "facet", "x", "y", "t", "", 2, None, 820)
-        self.assertIn(TRUSTED_MARKER, svg)
-
-    def test_quartile_plot_emits_marker(self):
-        svg = quartile_plot.render({"A": [1, 2, 3, 4, 5]}, "t", "", 720)
-        self.assertIn(TRUSTED_MARKER, svg)
-
-    def test_range_frame_emits_marker(self):
-        svg = range_frame.render(
-            [{"x": 1.0, "y": 2.0}, {"x": 2.0, "y": 3.0}],
-            title="t", subtitle="", marginal_dash=False, width=720, height=480)
-        self.assertIn(TRUSTED_MARKER, svg)
-
-
 class RendererNoneToleranceTests(unittest.TestCase):
     """render() must not crash on None/numeric title-like inputs; CLI callers
     are safe via argparse defaults but library callers (notebooks, pipelines)
@@ -202,6 +174,13 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "event-handler"):
             wrap_html.reject_active_svg(svg)
 
+    def test_rejects_event_handler_attribute_slash_separator(self):
+        # "<svg/onload=..." (slash instead of space as the attribute
+        # separator) is valid SVG/HTML; a whitespace-only regex misses it.
+        svg = '<svg xmlns="http://www.w3.org/2000/svg"/onload="alert(1)">'
+        with self.assertRaisesRegex(ValueError, "event-handler"):
+            wrap_html.reject_active_svg(svg)
+
     def test_rejects_javascript_url(self):
         svg = self.BENIGN_SVG.replace(
             "</svg>", '<a href="javascript:alert(1)"><text>x</text></a></svg>')
@@ -213,6 +192,42 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
             "</svg>", '<a xlink:href="javascript:alert(1)"><text>x</text></a></svg>')
         with self.assertRaisesRegex(ValueError, "javascript"):
             wrap_html.reject_active_svg(svg)
+
+    # --- regression coverage for the issues found via /codex review ---
+
+    def test_rejects_tab_encoded_javascript_url(self):
+        # &#9; decodes to a literal TAB; browsers strip TAB/LF/CR from URLs
+        # before recognizing the scheme, so "java<TAB>script:" still executes
+        # even though it isn't the contiguous string "javascript:".
+        svg = self.BENIGN_SVG.replace(
+            "</svg>", '<a href="java&#9;script:alert(1)">x</a></svg>')
+        with self.assertRaisesRegex(ValueError, "javascript"):
+            wrap_html.reject_active_svg(svg)
+
+    def test_rejects_trailing_iframe_after_svg_root(self):
+        # No pattern above matches <iframe>, so content after the real </svg>
+        # root sailed through untouched and rendered as live HTML.
+        svg = self.BENIGN_SVG + '<iframe src="javascript:alert(1)"></iframe>'
+        with self.assertRaisesRegex(ValueError, "iframe"):
+            wrap_html.reject_active_svg(svg)
+
+    def test_rejects_object_data_javascript_url(self):
+        svg = self.BENIGN_SVG + '<object data="javascript:alert(1)"></object>'
+        with self.assertRaisesRegex(ValueError, "object"):
+            wrap_html.reject_active_svg(svg)
+
+    def test_accepts_benign_title_starting_with_on(self):
+        # "Online = 87%" must not be flagged as an onload-style event
+        # handler just because it starts with the letters "on".
+        svg = '<svg xmlns="http://www.w3.org/2000/svg"><text>Online = 87%</text></svg>'
+        wrap_html.reject_active_svg(svg)  # should not raise
+
+    def test_accepts_benign_title_with_url_attr_word(self):
+        # "Data = 42" / "Background = white" must not be flagged just for
+        # containing the words "data"/"background" followed by "=".
+        for text in ("Data = 42", "Background = white noise"):
+            svg = f'<svg xmlns="http://www.w3.org/2000/svg"><text>{text}</text></svg>'
+            wrap_html.reject_active_svg(svg)  # should not raise
 
     # --- regression coverage for the issues found in /compound-engineering:ce-review ---
 
@@ -267,36 +282,134 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
             "</svg>", '<defs><g id="x"><rect/></g></defs><use href="#x"/></svg>')
         wrap_html.reject_active_svg(svg)  # should not raise
 
+    def test_accepts_svg_with_xml_declaration(self):
+        # A benign SVG opening with an XML prolog is safe; strip_xml_decl
+        # removes the prolog before inlining, so the single-root check must
+        # tolerate it rather than treat it as content before the <svg> root.
+        svg = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+               '<svg xmlns="http://www.w3.org/2000/svg">'
+               '<rect width="10" height="10"/></svg>')
+        wrap_html.reject_active_svg(svg)  # should not raise
+
+    def test_rejects_trailing_content_even_with_xml_declaration(self):
+        # Tolerating the prolog must not widen into tolerating trailing
+        # active content after the real </svg> root.
+        svg = ('<?xml version="1.0"?>\n'
+               '<svg xmlns="http://www.w3.org/2000/svg"></svg>'
+               '<iframe src="javascript:alert(1)"></iframe>')
+        with self.assertRaisesRegex(ValueError, "iframe"):
+            wrap_html.reject_active_svg(svg)
+
+    def test_accepts_title_that_mentions_tag_names_as_text(self):
+        # svg_text() escapes a title like "Usage of <script> tags over time"
+        # into the harmless text "&lt;script&gt;". Tag patterns must stay on
+        # the raw text or this legitimate chart gets rejected as if it
+        # contained a live <script> element.
+        # iframe stands in for the whole iframe/embed/object/img/meta/link/
+        # base/style alternation — they're one compiled regex, so testing
+        # more than one of them adds no additional coverage.
+        for tag in ("script", "iframe", "foreignObject"):
+            svg = render_line_svg.render(
+                [{"x": 1, "y": 2}, {"x": 2, "y": 3}],
+                title=f"Usage of <{tag}> tags over time")
+            wrap_html.reject_active_svg(svg)  # should not raise
+
+    def test_accepts_title_that_mentions_javascript_url_as_text(self):
+        # svg_text() escapes quote characters too, so a title reading
+        # 'Links using href="javascript:alert(1)"' is stored as the harmless
+        # text 'href=&quot;javascript:alert(1)&quot;' — no literal quote sits
+        # next to "href=" in the raw markup, so it must not be treated as a
+        # real attribute value.
+        svg = render_line_svg.render(
+            [{"x": 1, "y": 2}, {"x": 2, "y": 3}],
+            title='Links using href="javascript:alert(1)"')
+        wrap_html.reject_active_svg(svg)  # should not raise
+
+    def test_accepts_title_with_bare_unquoted_javascript_mention(self):
+        # svg_text() doesn't escape "=" or ":", so plain prose containing
+        # those characters must not look like an attribute assignment either
+        # — only a literal quote character makes it one.
+        svg = render_line_svg.render(
+            [{"x": 1, "y": 2}, {"x": 2, "y": 3}],
+            title="the URL was href=javascript:alert(1) beware")
+        wrap_html.reject_active_svg(svg)  # should not raise
+
 
 class BuildHtmlGuardTests(unittest.TestCase):
-    """build_html() must invoke reject_active_svg on untrusted SVGs so library
+    """build_html() must invoke reject_active_svg on every SVG so library
     callers (not just the CLI main) can't bypass the active-content check."""
 
-    def test_build_html_rejects_untrusted_with_script(self):
+    def test_build_html_rejects_svg_with_script(self):
         svg = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
         with self.assertRaisesRegex(ValueError, "script"):
             wrap_html.build_html("t", "", svg, "c", "x.css")
 
-    def test_build_html_accepts_trusted_svg(self):
-        svg = (f'<svg xmlns="http://www.w3.org/2000/svg">{TRUSTED_MARKER}'
-               '<rect width="10" height="10" fill="white"/></svg>')
-        html = wrap_html.build_html("t", "", svg, "c", "x.css")
-        self.assertIn("<rect", html)
+    def test_build_html_rejects_script_even_with_legacy_marker(self):
+        # The old forgeable provenance comment must not bypass the check.
+        svg = ('<svg xmlns="http://www.w3.org/2000/svg"><!-- tufte-vdqi: trusted -->'
+               '<script>alert(1)</script></svg>')
+        with self.assertRaisesRegex(ValueError, "script"):
+            wrap_html.build_html("t", "", svg, "c", "x.css")
 
-    def test_build_html_accepts_untrusted_benign_svg(self):
-        # Benign untrusted SVG (no marker, no active content) — build_html
-        # runs the rejector but it does not raise.
+    def test_build_html_accepts_benign_svg(self):
         svg = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10"/></svg>'
         html = wrap_html.build_html("t", "", svg, "c", "x.css")
         self.assertIn("<rect", html)
 
 
-class TrustMarkerTests(unittest.TestCase):
-    def test_is_trusted_detects_marker(self):
-        self.assertTrue(wrap_html.is_trusted(f"<svg>{TRUSTED_MARKER}</svg>"))
+class RendererNumericValidationTests(unittest.TestCase):
+    """Non-numeric coordinates must raise ValueError (caught by main), not
+    escape as a TypeError traceback."""
 
-    def test_is_trusted_rejects_missing_marker(self):
-        self.assertFalse(wrap_html.is_trusted("<svg></svg>"))
+    def test_line_svg_rejects_string_y(self):
+        with self.assertRaises(ValueError):
+            render_line_svg.render(
+                [{"x": 1, "y": "2"}, {"x": 2, "y": 3}], title="t")
+
+    def test_range_frame_rejects_string_x(self):
+        with self.assertRaises(ValueError):
+            range_frame.render(
+                [{"x": "1", "y": 2.0}, {"x": 2.0, "y": 3.0}],
+                title="t", subtitle="", marginal_dash=False, width=720, height=480)
+
+    def test_quartile_plot_rejects_string_value(self):
+        with self.assertRaises(ValueError):
+            quartile_plot.render({"A": [1, "2", 3]}, "t", "", 720)
+
+    def test_small_multiples_rejects_string_y(self):
+        with self.assertRaises(ValueError):
+            small_multiples.render(
+                [{"facet": "A", "x": 1, "y": "1"}, {"facet": "A", "x": 2, "y": 2}],
+                "facet", "x", "y", "t", "", 2, None, 820)
+
+
+class MirroredFileDriftTests(unittest.TestCase):
+    """Files intentionally duplicated across the two skills (so each installs
+    standalone) must stay byte-identical."""
+
+    SKILLS_DIR = Path(__file__).resolve().parent.parent.parent
+
+    def test_principles_reference_copies_identical(self):
+        a = self.SKILLS_DIR / "tufte-chart" / "references" / "tufte-principles.md"
+        b = self.SKILLS_DIR / "tufte-critique" / "references" / "tufte-principles.md"
+        self.assertEqual(a.read_bytes(), b.read_bytes(),
+                         "tufte-principles.md has drifted between the two skills")
+
+    def test_deflate_copies_identical(self):
+        a = self.SKILLS_DIR / "tufte-chart" / "scripts" / "deflate.py"
+        b = self.SKILLS_DIR / "tufte-critique" / "scripts" / "deflate.py"
+        self.assertEqual(a.read_bytes(), b.read_bytes(),
+                         "deflate.py has drifted between the two skills")
+
+    def test_manifest_version_and_description_match(self):
+        repo_root = self.SKILLS_DIR.parent
+        plugin = json.loads((repo_root / ".claude-plugin" / "plugin.json").read_text())
+        marketplace = json.loads((repo_root / ".claude-plugin" / "marketplace.json").read_text())
+        entry = marketplace["plugins"][0]
+        self.assertEqual(plugin["version"], entry["version"],
+                         "plugin.json and marketplace.json versions have drifted")
+        self.assertEqual(plugin["description"], entry["description"],
+                         "plugin.json and marketplace.json descriptions have drifted")
 
 
 if __name__ == "__main__":

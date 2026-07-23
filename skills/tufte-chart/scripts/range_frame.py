@@ -9,7 +9,7 @@ Optional --marginal-dash adds a dot-dash plot (VDQI p.133): marginal frequency
 dashes along each axis, framing the bivariate distribution.
 
 Usage:
-  python range_frame.py \\
+  python3 range_frame.py \\
     --data '[{"x":1.2,"y":3.4},{"x":2.1,"y":4.5},{"x":3.8,"y":5.1}]' \\
     --title "Body mass vs. wing span" \\
     [--marginal-dash] --out chart.svg
@@ -17,7 +17,7 @@ Usage:
 import argparse, json, sys
 from pathlib import Path
 
-from _svg_text import TRUSTED_MARKER, svg_text
+from _svg_text import require_numeric, svg_text
 
 
 def render(data, title, subtitle, marginal_dash, width, height):
@@ -25,6 +25,7 @@ def render(data, title, subtitle, marginal_dash, width, height):
     if len(pts) < 2:
         raise ValueError("need at least two points")
     xs, ys = zip(*pts)
+    require_numeric(xs + ys, "x and y values")
     xmin, xmax, ymin, ymax = min(xs), max(xs), min(ys), max(ys)
     if xmax == xmin or ymax == ymin:
         raise ValueError("x and y must each span a range")
@@ -40,7 +41,6 @@ def render(data, title, subtitle, marginal_dash, width, height):
     parts = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
       f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="13">',
-      TRUSTED_MARKER,
       f'<rect width="{width}" height="{height}" fill="white"/>',
       f'<text x="{ml}" y="28" font-size="17">{svg_text(title)}</text>',
     ]
@@ -69,13 +69,13 @@ def render(data, title, subtitle, marginal_dash, width, height):
         dash_len = 6
         # x-axis marginal: dashes below the x-axis at each unique x
         y_dash_top = height - mb + 4
-        for x, _ in pts:
+        for x in sorted(set(xs)):
             parts.append(f'<line x1="{sx(x):.1f}" y1="{y_dash_top:.1f}" '
                          f'x2="{sx(x):.1f}" y2="{y_dash_top + dash_len:.1f}" '
                          f'stroke="#666" stroke-width="0.8"/>')
         # y-axis marginal: dashes left of the y-axis at each unique y
         x_dash_right = ml - 4
-        for _, y in pts:
+        for y in sorted(set(ys)):
             parts.append(f'<line x1="{x_dash_right - dash_len:.1f}" y1="{sy(y):.1f}" '
                          f'x2="{x_dash_right:.1f}" y2="{sy(y):.1f}" '
                          f'stroke="#666" stroke-width="0.8"/>')

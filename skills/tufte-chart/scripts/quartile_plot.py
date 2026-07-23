@@ -9,7 +9,7 @@ on the paper once to draw the quartile plot' (Tufte).
 Input: {group_name: [values, ...]} JSON.
 
 Usage:
-  python quartile_plot.py \\
+  python3 quartile_plot.py \\
     --data '{"A":[1,2,3,4,5,6,7,8,9,10],"B":[3,4,4,5,6,6,7,7,8,9]}' \\
     --title "Reaction time (ms) by condition" \\
     --out chart.svg
@@ -17,10 +17,11 @@ Usage:
 import argparse, json, sys
 from pathlib import Path
 
-from _svg_text import TRUSTED_MARKER, svg_text
+from _svg_text import require_numeric, svg_text
 
 
 def quartiles(xs):
+    require_numeric(xs, "group values")
     xs = sorted(xs)
     n = len(xs)
     if n < 2:
@@ -55,7 +56,6 @@ def render(groups, title, subtitle, width):
     parts = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
       f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="13">',
-      TRUSTED_MARKER,
       f'<rect width="{width}" height="{height}" fill="white"/>',
       f'<text x="{ml}" y="28" font-size="17">{svg_text(title)}</text>',
     ]

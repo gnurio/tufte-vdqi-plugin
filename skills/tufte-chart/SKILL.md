@@ -1,16 +1,13 @@
 ---
-name: render-tufte-chart
-description: Produce a real, publication-ready data graphic (SVG or HTML) that obeys Tufte's principles — minimal ink, range-frame axes, direct labels, honest proportions. Use whenever someone wants to design, build, create, draw, or actually produce a chart the Tufte way, or to rebuild a chart after assessment found problems. This is the only skill in the toolkit that outputs an actual chart file.
+name: tufte-chart
+description: Render a real, publication-ready data graphic (SVG or HTML) that obeys Tufte's principles — minimal ink, range-frame axes, direct labels, honest proportions. Use when someone wants to design, build, create, draw, plot, or visualize a chart or graph the Tufte way, or to rebuild a chart after a critique found problems. This is the skill that outputs an actual chart file. Not for critiquing an existing graphic (`tufte-critique`).
 ---
 
-# Render Tufte Chart
+# Tufte Chart
 
-This skill produces an actual chart file. It is the toolkit's output stage: the
-router sends "design / build / produce a chart" requests here, and an
-optimisation workflow ends here (assess to diagnose, render to rebuild).
-
-The old version of this skill shipped Python that called undefined functions and
-could not run. It is replaced by a working script plus clear construction guidance.
+Render an actual chart file. "Design / build / produce a chart" requests land
+here; to fix a cluttered or misleading chart, run `tufte-critique` first and
+rebuild here honoring its remedy tags (B1–B7).
 
 ## Build checklist (apply every time)
 
@@ -30,13 +27,19 @@ never needs cleanup afterwards. Read that file for the full reasoning.
 - **Many series → small multiples (B3).** Repeat one shrunken design with shared
   scales rather than overplotting; order frames meaningfully.
 - **Money over time (B7).** If the series is currency across years, convert to
-  real terms first (use `assess-graphical-excellence/scripts/deflate.py` with
-  retrieved CPI) and label the axis "real <base-year> <currency>".
-- **Inert SVG (B8).** No `<script>`, no event-handler attributes (`onload=`
-  etc.), no `javascript:` URLs, no `<foreignObject>`, no SMIL `<animate>`/
-  `<set>`. The four scripts above never emit these; if you hand-build SVG for
-  one of the "other genres" below, keep it inert too — `wrap_html.py` will
-  refuse to wrap anything carrying active content.
+  real terms first (use `scripts/deflate.py` with retrieved CPI) and label the
+  axis "real <base-year> <currency>".
+- **Wider than tall.** Unless the data dictates otherwise, "move toward
+  horizontal graphics about 50 percent wider than tall" (VDQI p.190). The
+  bundled scripts default to this; hold hand-built SVGs to it too.
+- **Friendly type and color (Part H).** Serif upper-and-lower-case type, words
+  left-to-right, colors legible to color-deficient viewers — never red vs
+  green for an essential contrast.
+- **Inert SVG.** No `<script>`, no event-handler attributes (`onload=` etc.),
+  no `javascript:` URLs, no `<foreignObject>`, no SMIL `<animate>`/`<set>`.
+  The four scripts below never emit these; if you hand-build SVG for one of
+  the "other genres", keep it inert too — `wrap_html.py` refuses to wrap
+  anything carrying active content.
 
 ## Pick the genre first
 
@@ -60,7 +63,7 @@ before rendering. If forced to graph, use C6 supertable, not pie/bar.
 
 ## Multi-render rule (when to produce N alternatives)
 
-When the assess step flagged a "Multi-render trigger" (data shape with more
+When the critique step flagged a "Multi-render trigger" (data shape with more
 than one correct Tufte answer), **render both alternatives side-by-side** in
 one output, then let the user pick. This is the discipline that prevents
 quiet defaulting to the obvious genre.
@@ -84,7 +87,7 @@ near-duplicates.
 ### Line / time-series (C10)
 
 ```
-python scripts/render_line_svg.py \
+python3 scripts/render_line_svg.py \
   --data '[{"x":2000,"y":12.1},{"x":2023,"y":22.9}]' \
   --title "Revenue (real 2023 USD, M)" --series "Revenue" --out chart.svg
 ```
@@ -97,7 +100,7 @@ values before passing them in.)
 Input is a flat list of records keyed by facet, x, and y:
 
 ```
-python scripts/small_multiples.py \
+python3 scripts/small_multiples.py \
   --data '[{"facet":"NA","x":1,"y":1000},{"facet":"EU","x":1,"y":900}, ...]' \
   --facet-key facet --x-key x --y-key y \
   --title "Daily active users by region" --cols 3 --out chart.svg
@@ -112,7 +115,7 @@ avoid repeating ink.
 Input is a JSON object mapping group name to list of values:
 
 ```
-python scripts/quartile_plot.py \
+python3 scripts/quartile_plot.py \
   --data '{"Control":[2.3,2.5,...],"TreatmentA":[1.8,2.0,...]}' \
   --title "Reaction time (s) by condition" --out chart.svg
 ```
@@ -123,7 +126,7 @@ the full range, the IQR offset horizontally from it, and a median tick.
 ### Range-frame scatter (C2) — and optional dot-dash plot (C3)
 
 ```
-python scripts/range_frame.py \
+python3 scripts/range_frame.py \
   --data '[{"x":1.2,"y":3.4},{"x":2.1,"y":4.5},...]' \
   --title "Body mass vs. wing span" \
   [--marginal-dash] --out chart.svg
@@ -148,7 +151,7 @@ fonts into a sibling `tufte-assets/` directory the first time so the result
 opens correctly in any browser with no network:
 
 ```
-python scripts/wrap_html.py \
+python3 scripts/wrap_html.py \
   --svg chart.svg --out chart.html \
   --title "Revenue, 2000–2023" \
   --caption "Inflation-adjusted to 2023 USD using BLS CPI-U."
@@ -160,23 +163,18 @@ browser-ready Tufte page (sharing a link, hosting a report). Pass `--no-assets`
 if the page will be served from a site that already publishes `tufte.css` at
 the expected path.
 
-**If wrap_html refuses your SVG.** The wrapper accepts SVGs produced by the
-four scripts above (they carry a trusted marker). If it exits with
-`ERROR[untrusted-svg]`, the SVG wasn't produced by one of those — re-render
-the chart with the matching script and try again. If you genuinely need to
-wrap a hand-built or third-party SVG, pass `--untrusted`; the wrapper will
-then run a best-effort active-content check and exit with `ERROR[active-svg]`
-if it finds anything script-bearing. Either way, the fix is to produce inert
-SVG (see B8 above).
+wrap_html inspects every SVG before inlining. If it exits with
+`ERROR[active-svg]`, the SVG carries script-bearing content (scripts, event
+handlers, animation, external references) — produce inert SVG instead (see
+the build checklist); the four bundled scripts always do.
 
 Always save the file and tell the user its path. Where useful, follow up with
-`assess-graphical-excellence` to confirm the result scores well.
+`tufte-critique` to confirm the result scores well.
 
 ## What good looks like
 
 A file that renders in a browser, carries no chartjunk, labels data directly, uses
-honest proportions, and would itself pass an `assess-graphical-excellence` review.
+honest proportions, and would itself pass a `tufte-critique` review.
 
 ## Related skills
-- `assess-graphical-excellence` — diagnose a chart and get the remedies to apply here.
-- `orchestrate-tufte-vdqi` — routes design/produce/fix requests to this skill.
+- `tufte-critique` — diagnose a chart and get the remedies to apply here.

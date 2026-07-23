@@ -1,14 +1,14 @@
 ---
-name: assess-graphical-excellence
-description: Evaluate a data graphic against Edward Tufte's nine criteria, name the chartjunk species present, compute lie factor, compare against VDQI's named-failure catalogue, and return prioritised fixes tagged with the specific Tufte remedy (B1–B7), genre to switch to (C1–C10), and exemplar to emulate. Use whenever someone asks whether a chart is good, what is wrong with a chart, how to clean up or declutter a chart, whether a graphic is misleading, or for any Tufte-style critique of an existing visualization.
+name: tufte-critique
+description: Critique a data graphic against a nine-criterion rubric derived from Tufte's VDQI — score it, name the chartjunk species present, compute the lie factor, compare against the book's named-failure catalogue, and return prioritised fixes tagged with the Tufte remedy (B1–B7), genre to switch to (C1–C10), and exemplar to emulate. Use when someone asks whether a chart, graph, plot, or dashboard is any good; what is wrong with it; whether it is misleading or distorted; or how to clean up, declutter, or simplify it. Not for producing a chart file (`tufte-chart`).
 ---
 
-# Assess Graphical Excellence
+# Tufte Critique
 
-This is the assessment hub of the Tufte toolkit. Its job is to score an existing
-graphic, **name what's wrong using Tufte's vocabulary** (the duck, the dreaded
-grid, moiré vibration, dimensionality violation, etc.), and hand back the exact
-remedy plus the genre to switch to and an exemplar to emulate.
+Critique an existing graphic: score it, **name what's wrong using Tufte's
+vocabulary** (the duck, the dreaded grid, moiré vibration, dimensionality
+violation, etc.), and hand back the exact remedy plus the genre to switch to
+and an exemplar to emulate.
 
 The output is concrete and source-grounded because the model reasons over a
 single principles file (`references/tufte-principles.md`) that quotes VDQI by
@@ -21,14 +21,15 @@ A description (or image, or file) of the graphic, and ideally its purpose and
 audience. If something essential is missing, infer reasonably and state the
 assumption rather than stalling.
 
-## How to assess (six-step workflow)
+## How to critique (six-step workflow)
 
 Read `references/tufte-principles.md` first. The workflow uses every part of it.
 
 1. **Score the nine criteria** (Part A). 0–10 each, with a chart-specific
-   observation. Use VDQI's numeric anchors: e.g. data-ink ratio "0.1–0.2 is
-   typical, edit toward 1.0" (p.136); data density 0.15 numbers/in² is
-   "overwrought" (p.162). Unsupported scores are the main failure mode.
+   observation. Use VDQI's numeric anchors: e.g. data-ink ratio "in several
+   cases … increased from .1 or .2 to nearly 1.0" through editing (p.136);
+   data density 0.15 numbers/in² is "overwrought" (p.162). Unsupported scores
+   are the main failure mode.
 
 2. **Compute the lie factor when proportionality looks suspicious** (Part B,
    B1). Formula: `(visual change %) / (data change %)`. Acceptable 0.95–1.05.
@@ -60,8 +61,8 @@ Read `references/tufte-principles.md` first. The workflow uses every part of it.
    > Quiet defaulting to the obvious chart is the failure mode this rule
    > exists to catch.
 
-   Common multi-answer data shapes (flag these in the output so render knows
-   to emit alternatives):
+   Common multi-answer data shapes (flag these in the output so `tufte-chart`
+   knows to emit alternatives):
    - **1 number / single ratio** → prose statement + tiny inline visual
    - **≤20 numbers** → supertable + Tufte chart (VDQI p.56)
    - **Many series of one x** → small multiples + overplotted comparison
@@ -82,10 +83,14 @@ Read `references/tufte-principles.md` first. The workflow uses every part of it.
 If the graphic plots a multi-year currency series, check B7. Use
 `scripts/deflate.py` (requires real CPI values; refuses to guess).
 
+**A sound graphic deserves a clean bill.** "The principles should not be
+applied rigidly or in a peevish spirit" (VDQI p.191) — if the chart is honest
+and clear, score it high and say so; do not invent problems.
+
 ## Output format
 
 ```
-## Assessment: <graphic>
+## Critique: <graphic>
 Context: <purpose / audience, or stated assumption>
 
 ### Scores
@@ -124,7 +129,6 @@ famous case to emulate. The reader should leave with a concrete picture of what
 to build next, not a list of vague improvements.
 
 ## Related skills
-- `render-tufte-chart` — rebuild the graphic so it satisfies these criteria,
-  using the per-genre scripts named in your fixes.
-- `orchestrate-tufte-vdqi` — routes here for evaluation, then to render for the
-  fix.
+- `tufte-chart` — rebuild the graphic so it satisfies these criteria, using
+  the per-genre scripts named in your fixes. To fix a cluttered or misleading
+  chart: critique here first, then rebuild there honoring the B-tags.

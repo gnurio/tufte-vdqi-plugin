@@ -9,7 +9,7 @@ those two values labelled), the year span labelled at the ends of the x-axis, an
 the series labelled directly at its right endpoint instead of a legend.
 
 Usage:
-  python render_line_svg.py \
+  python3 render_line_svg.py \
     --data '[{"x":2000,"y":12.1},{"x":2010,"y":18.4},{"x":2023,"y":22.9}]' \
     --title "Revenue (real 2023 USD, millions)" \
     --series "Revenue" \
@@ -18,13 +18,14 @@ Usage:
 """
 import argparse, json, sys
 
-from _svg_text import TRUSTED_MARKER, svg_text
+from _svg_text import require_numeric, svg_text
 
 
 def render(data, title, series="", subtitle="", width=760, height=420):
-    pts = sorted(data, key=lambda d: d["x"])
-    if len(pts) < 2:
+    if len(data) < 2:
         raise ValueError("need at least two data points")
+    require_numeric([d["x"] for d in data] + [d["y"] for d in data], "x and y values")
+    pts = sorted(data, key=lambda d: d["x"])
     xs = [p["x"] for p in pts]
     ys = [p["y"] for p in pts]
     xmin, xmax, ymin, ymax = min(xs), max(xs), min(ys), max(ys)
@@ -45,7 +46,6 @@ def render(data, title, series="", subtitle="", width=760, height=420):
     svg = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
       f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="13">',
-      TRUSTED_MARKER,
       f'<rect width="{width}" height="{height}" fill="white"/>',
       f'<text x="{ml}" y="28" font-size="17">{svg_text(title)}</text>',
     ]

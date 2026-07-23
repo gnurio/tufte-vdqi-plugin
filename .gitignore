@@ -3,3 +3,4 @@
 CHANGES.md
 __pycache__/
 *.pyc
+evals/

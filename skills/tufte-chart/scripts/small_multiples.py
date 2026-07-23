@@ -10,7 +10,7 @@ Input data is a flat list of records, each with three keys: the facet, the x,
 and the y. Facets are sorted by total y descending unless --order is supplied.
 
 Usage:
-  python small_multiples.py \\
+  python3 small_multiples.py \\
     --data '[{"facet":"NA","x":1,"y":1000},{"facet":"NA","x":2,"y":1050},
              {"facet":"EU","x":1,"y":900}, {"facet":"EU","x":2,"y":920}]' \\
     --facet-key facet --x-key x --y-key y \\
@@ -20,17 +20,21 @@ Usage:
 import argparse, json, math, sys
 from pathlib import Path
 
-from _svg_text import TRUSTED_MARKER, svg_text
+from _svg_text import require_numeric, svg_text
 
 
 def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
     facets = {}
     for d in data:
         facets.setdefault(d[facet_key], []).append((d[x_key], d[y_key]))
-    for k in facets:
-        facets[k].sort(key=lambda p: p[0])
     if not facets:
         raise ValueError("no facets in data")
+
+    xs_all = [x for pts in facets.values() for x, _ in pts]
+    ys_all = [y for pts in facets.values() for _, y in pts]
+    require_numeric(xs_all + ys_all, "x and y values")
+    for k in facets:
+        facets[k].sort(key=lambda p: p[0])
 
     if order:
         names = [n for n in order if n in facets]
@@ -42,8 +46,6 @@ def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
     cols = max(1, min(cols, n))
     rows = math.ceil(n / cols)
 
-    xs_all = [x for pts in facets.values() for x, _ in pts]
-    ys_all = [y for pts in facets.values() for _, y in pts]
     xmin, xmax, ymin, ymax = min(xs_all), max(xs_all), min(ys_all), max(ys_all)
     if xmax == xmin or ymax == ymin:
         raise ValueError("x and y must each span a range across the dataset")
@@ -67,7 +69,6 @@ def render(data, facet_key, x_key, y_key, title, subtitle, cols, order, width):
     parts = [
       f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {int(height)}" '
       f'font-family="et-book, ET-Bembo, Palatino, Georgia, serif" font-size="12">',
-      TRUSTED_MARKER,
       f'<rect width="{width}" height="{int(height)}" fill="white"/>',
       f'<text x="{pad_lr}" y="28" font-size="17">{svg_text(title)}</text>',
     ]

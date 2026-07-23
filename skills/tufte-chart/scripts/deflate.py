@@ -11,7 +11,7 @@ you retrieved (BLS CPI-U, UK CPI, EU HICP, ...) and ERRORS if a year you asked t
 convert has no CPI supplied — it never guesses.
 
 Usage:
-  python deflate.py \
+  python3 deflate.py \
     --values 40000,50000,60000 \
     --years  2005,2015,2023 \
     --cpi '{"2005":195.3,"2015":237.0,"2023":304.7}' \
