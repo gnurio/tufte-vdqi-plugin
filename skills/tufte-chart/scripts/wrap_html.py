@@ -109,12 +109,17 @@ _ACTIVE_SVG_PATTERNS = [
 # quotes is then decoded and normalized to catch java&#9;script:-style
 # obfuscation, since a browser applies both normalizations to an
 # attribute's VALUE before parsing its URL scheme.
-# Trade-off: a genuinely unquoted attack (<a href=javascript:...> with no
-# quotes at all) is valid HTML this pattern won't catch — accepted because
-# none of the four local renderers ever emit unquoted attributes, and the
-# false-positive cost of a laxer match hits every real chart title.
 _URL_ATTR_VALUE_PATTERN = re.compile(
     rf"\b{_URL_ATTRS}\s*=\s*(['\"])(.*?)\1", re.IGNORECASE | re.DOTALL)
+
+# Unquoted form (<a href=javascript:...>, no quotes at all) is valid HTML
+# the pattern above won't catch. Requiring the match to sit inside an open
+# "<...>" tag span (nothing but non-">" chars since the last "<") keeps it
+# from firing on escaped chart text: svg_text() escapes literal "<", so
+# prose mentioning "href=javascript:..." inside a <text> element is always
+# preceded by the ">" that closed the enclosing tag, never a "<".
+_UNQUOTED_URL_ATTR_VALUE_PATTERN = re.compile(
+    rf"<[^>]*?\b{_URL_ATTRS}\s*=\s*(?!['\"])([^\s>/]+)", re.IGNORECASE)
 _JAVASCRIPT_SCHEME_PATTERN = re.compile(r"^\s*javascript:", re.IGNORECASE)
 
 
@@ -137,7 +142,7 @@ def reject_active_svg(svg: str) -> None:
     """Raise ValueError if the SVG contains script-bearing constructs.
 
     Tag/attribute-name/DOCTYPE patterns are checked against the raw text
-    only. Real (literally-quoted) URL-attribute values are additionally
+    only. Real URL-attribute values (quoted or unquoted) are additionally
     checked with HTML entities decoded and TAB/LF/CR stripped, to catch
     java&#9;script:-style scheme obfuscation — see _URL_ATTR_VALUE_PATTERN's
     comment for why this stays scoped to real attribute values only.
@@ -152,6 +157,13 @@ def reject_active_svg(svg: str) -> None:
         candidates |= {_strip_url_whitespace(c) for c in list(candidates)}
         if any(_JAVASCRIPT_SCHEME_PATTERN.search(c) for c in candidates):
             _refuse("javascript: URL")
+
+    for match in _UNQUOTED_URL_ATTR_VALUE_PATTERN.finditer(svg):
+        raw_value = match.group(1)
+        candidates = {raw_value, unescape(raw_value)}
+        candidates |= {_strip_url_whitespace(c) for c in list(candidates)}
+        if any(_JAVASCRIPT_SCHEME_PATTERN.search(c) for c in candidates):
+            _refuse("javascript: URL (unquoted attribute)")
 
     # Check against the prolog-stripped text: a leading <?xml?> declaration
     # (which strip_xml_decl removes before inlining) is benign and must not

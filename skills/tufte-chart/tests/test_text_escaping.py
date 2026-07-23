@@ -193,6 +193,14 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "javascript"):
             wrap_html.reject_active_svg(svg)
 
+    def test_rejects_unquoted_javascript_url(self):
+        # <a href=javascript:...> with no quotes at all is valid HTML;
+        # the quoted-value pattern alone won't see it.
+        svg = self.BENIGN_SVG.replace(
+            "</svg>", '<a href=javascript:alert(1)>x</a></svg>')
+        with self.assertRaisesRegex(ValueError, "javascript"):
+            wrap_html.reject_active_svg(svg)
+
     # --- regression coverage for the issues found via /codex review ---
 
     def test_rejects_tab_encoded_javascript_url(self):
