@@ -53,7 +53,9 @@ _ACTIVE_SVG_PATTERNS = [
     (re.compile(rf"<\s*{_NS_PREFIX}(?:use|image)\b[^>]*?\b(?:xlink:)?href\s*=(?!\s*['\"]?\s*#)",
                 re.IGNORECASE),
      "<use>/<image> with non-fragment href"),
-    (re.compile(r"\son[a-zA-Z]+\s*=", re.IGNORECASE),
+    # \b, not a literal \s: "<svg/onload=..." (slash instead of space as the
+    # attribute separator) is valid SVG/HTML and was missed by a whitespace-only match.
+    (re.compile(r"\bon[a-zA-Z]+\s*=", re.IGNORECASE),
      "event-handler attribute (on*=)"),
     (re.compile(r"\b(?:xlink:)?href\s*=\s*['\"]?\s*javascript:", re.IGNORECASE),
      "javascript: URL"),

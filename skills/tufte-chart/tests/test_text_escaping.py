@@ -174,6 +174,13 @@ class WrapHtmlActiveContentTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "event-handler"):
             wrap_html.reject_active_svg(svg)
 
+    def test_rejects_event_handler_attribute_slash_separator(self):
+        # "<svg/onload=..." (slash instead of space as the attribute
+        # separator) is valid SVG/HTML; a whitespace-only regex misses it.
+        svg = '<svg xmlns="http://www.w3.org/2000/svg"/onload="alert(1)">'
+        with self.assertRaisesRegex(ValueError, "event-handler"):
+            wrap_html.reject_active_svg(svg)
+
     def test_rejects_javascript_url(self):
         svg = self.BENIGN_SVG.replace(
             "</svg>", '<a href="javascript:alert(1)"><text>x</text></a></svg>')
